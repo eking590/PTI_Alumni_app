@@ -1,0 +1,43 @@
+<%- include('../../partials/header') %>
+
+<div class="dashboard-container">
+  <h2>Welcome, <%= alumni.firstName %>!</h2>
+  
+  <div class="profile-section">
+    <div class="profile-image">
+      <% if (alumni.image) { %>
+        <img src="<%= alumni.image %>" alt="Profile Image">
+      <% } else { %>
+        <div class="default-image">No Image</div>
+      <% } %>
+    </div>
+    
+    <div class="profile-info">
+      <h3>Your Information</h3>
+      <p><strong>Name:</strong> <%= alumni.firstName %> <%= alumni.lastName %></p>
+      <p><strong>Graduation Year:</strong> <%= alumni.graduationYear %></p>
+      <p><strong>Degree:</strong> <%= alumni.degree %></p>
+      <p><strong>Email:</strong> <%= alumni.email %></p>
+      <% if (alumni.currentJob) { %>
+        <p><strong>Current Job:</strong> <%= alumni.currentJob %></p>
+      <% } %>
+      <% if (alumni.company) { %>
+        <p><strong>Company:</strong> <%= alumni.company %></p>
+      <% } %>
+      
+      <a href="/alumni/edit-profile" class="button">Edit Profile</a>
+    </div>
+  </div>
+
+  <div class="alumni-actions">
+    <h3>Quick Links</h3>
+    <div class="action-buttons">
+      <a href="/alumni/events" class="button">Upcoming Events</a>
+      <a href="/alumni/network" class="button">Alumni Network</a>
+      <a href="/alumni/jobs" class="button">Job Board</a>
+      <a href="/alumni/login" class="button">Logout</a>
+    </div>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

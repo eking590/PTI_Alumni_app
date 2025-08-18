@@ -1,0 +1,30 @@
+<h2>All Alumni</h2>
+
+<a href="/alumni/search" class="button">Search Alumni</a>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Graduation Year</th>
+      <th>Degree</th>
+      <th>Email</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% alumni.forEach(alum => { %>
+      <tr>
+        <td><%= alum.firstName %> <%= alum.lastName %></td>
+        <td><%= alum.graduationYear %></td>
+        <td><%= alum.degree %></td>
+        <td><%= alum.email %></td>
+        <td>
+          <a href="/alumni/edit/<%= alum._id %>" class="button">Edit</a>
+          <a href="/alumni/delete/<%= alum._id %>" class="button danger" onclick="return confirm('Are you sure?')">Delete</a>
+        </td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+

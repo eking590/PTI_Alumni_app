@@ -1,0 +1,21 @@
+<%- include('../../partials/header') %>
+
+
+      
+      <!-- Search Form -->
+      <div class="box">
+        <h2 class="subtitle">Search Alumni</h2>
+        <form action="/alumni/search" method="GET">
+          <div class="field">
+            <label class="label">Search Query</label>
+            <div class="control">
+              <input class="input" type="text" name="query" placeholder="Enter Alumni Email" value="<%= query %>">
+            <button type="submit">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+<%- include('../../partials/footer') %>

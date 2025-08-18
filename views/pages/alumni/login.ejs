@@ -1,0 +1,28 @@
+<%- include('../../partials/header') %>
+
+<div class="login-container">
+  <h2>Alumni Login</h2>
+  
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert error"><%= error %></div>
+  <% } %>
+
+  <form action="/alumni/login" method="POST">
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <button type="submit">Login</button>
+  </form>
+
+  <div class="login-links">
+    <p>Don't have an account? <a href="/alumni/register">Register here</a></p>
+    <p>Forgot password? <a href="/alumni/forgot-password">Reset it</a></p>
+  </div>
+</div>
+
+<%- include('../../partials/footer') %>

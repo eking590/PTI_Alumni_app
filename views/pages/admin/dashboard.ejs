@@ -1,0 +1,59 @@
+<%- include('../../partials/header') %>
+
+<div class="dashboard-container">
+  <h2>Admin Dashboard</h2>
+  
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3>Total Alumni</h3>
+      <p><%= alumniCount %></p>
+    </div>
+    <div class="stat-card">
+      <h3>Recent Registrations</h3>
+      <p><%= recentAlumniCount %></p>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <h3>Quick Actions</h3>
+    <div class="action-buttons">
+      <a href="/alumni" class="button">Manage Alumni</a>
+      <a href="/alumni/register" class="button">Add New Alumni</a>
+      <a href="/alumni/search-form" class="button">Search Alumni</a>
+    </div>
+  </div>
+
+  <div class="recent-alumni">
+    <h3>Recently Added Alumni</h3>
+    <% if (recentAlumni.length > 0) { %>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Graduation Year</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% recentAlumni.forEach(alumni => { %>
+            <tr>
+              <td><%= alumni.firstName %> <%= alumni.lastName %></td>
+              <td><%= alumni.graduationYear %></td>
+              <td><%= alumni.email %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } else { %>
+      <p>No recent alumni found</p>
+    <% } %>
+  </div>
+
+<div>
+ <a href="/login" class="button">Logout</a>
+</div>
+</div> 
+
+
+
+<%- include('../../partials/footer') %>
