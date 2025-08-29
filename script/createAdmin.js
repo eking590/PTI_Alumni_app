@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import Admin from './models/Admin.js';
+import Admin from '../models/Admin.js';
 
 dotenv.config();
 
@@ -34,5 +34,6 @@ const createAdmin = async () => {
     process.exit(1);
   }
 };
+
 
 createAdmin();
