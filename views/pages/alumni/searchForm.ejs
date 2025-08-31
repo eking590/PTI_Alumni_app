@@ -1,21 +1,336 @@
 <%- include('../../partials/header') %>
 
-
-      
-      <!-- Search Form -->
-      <div class="box">
-        <h2 class="subtitle">Search Alumni</h2>
-        <form action="/alumni/search" method="GET">
-          <div class="field">
-            <label class="label">Search Query</label>
-            <div class="control">
-              <input class="input" type="text" name="query" placeholder="Enter Alumni Email" value="<%= query %>">
-            <button type="submit">Search</button>
-            </div>
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+  <!-- Search Form -->
+  <div class="bg-white p-6 rounded-lg shadow mb-8">
+    <h2 class="text-2xl font-bold mb-4">Search Alumni</h2>
+    
+    <!-- Switch between POST for image upload and GET for text search -->
+    <form action="/search" method="<%= searchByImage ? 'POST' : 'GET' %>" enctype="<%= searchByImage ? 'multipart/form-data' : 'application/x-www-form-urlencoded' %>" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Search Type Toggle -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Search Type
+          </label>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input 
+                type="radio" 
+                name="searchByImage" 
+                value="false" 
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <%= !searchByImage ? 'checked' : '' %>
+                onchange="toggleSearchType()"
+              >
+              Text Search
+            </label>
+            <label class="flex items-center">
+              <input 
+                type="radio" 
+                name="searchByImage" 
+                value="true" 
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <%= searchByImage ? 'checked' : '' %>
+                onchange="toggleSearchType()"
+              >
+              Image Search
+            </label>
           </div>
-        </form>
+        </div>
+
+        <!-- Search Options -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Search Options
+          </label>
+          <div class="space-y-2">
+            <label class="flex items-center">
+              <input 
+                type="checkbox" 
+                name="includeImageAnalysis" 
+                value="true" 
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <%= includeImageAnalysis ? 'checked' : '' %>
+              >
+              Include Image Analysis
+            </label>
+            <label class="flex items-center">
+              <input 
+                type="checkbox" 
+                name="onlyWithImages" 
+                value="true" 
+                class="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <%= onlyWithImages ? 'checked' : '' %>
+              >
+              Only show results with profile images
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Search Field -->
+      <div id="textSearch" style="display: <%= searchByImage ? 'none' : 'block' %>">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Search by Name, Email, or Company
+        </label>
+        <input 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          type="text" 
+          name="query" 
+          placeholder="Enter name, email, company, or position..."
+          value="<%= query || '' %>"
+        >
+      </div>
+
+      <!-- Image Search Field -->
+      <div id="imageSearch" style="display: <%= searchByImage ? 'block' : 'none' %>">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Upload Alumni Photo to Search
+        </label>
+        <input 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          type="file" 
+          name="searchImage" 
+          accept="image/*"
+          id="searchImageInput"
+        >
+        <p class="text-xs text-gray-500 mt-1">
+          Supported formats: JPEG, PNG, GIF • Max size: 5MB
+        </p>
+        
+        <!-- Image Preview -->
+        <div id="imagePreview" class="mt-3 hidden">
+          <p class="text-sm text-gray-600 mb-2">Image Preview:</p>
+          <img id="preview" class="w-32 h-32 object-cover rounded-lg border border-gray-300">
+        </div>
+      </div>
+
+      <!-- Advanced Search Options -->
+      <div class="bg-gray-50 p-4 rounded-lg">
+        <h3 class="text-sm font-medium text-gray-700 mb-3">Advanced Filters</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Department</label>
+            <select name="department" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+              <option value="">All Departments</option>
+              <% 
+                const departments = [
+                  'Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 
+                  'Civil Engineering', 'Business Administration', 'Mathematics',
+                  'Physics', 'Chemistry', 'Biology', 'Economics', 'Psychology'
+                ];
+                departments.forEach(dept => { 
+              %>
+                <option value="<%= dept %>" <%= department === dept ? 'selected' : '' %>><%= dept %></option>
+              <% }); %>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Graduation Year</label>
+            <select name="graduationYear" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+              <option value="">All Years</option>
+              <% for (let year = new Date().getFullYear(); year >= 1980; year--) { %>
+                <option value="<%= year %>" <%= graduationYear == year ? 'selected' : '' %>><%= year %></option>
+              <% } %>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Company</label>
+            <input 
+              type="text" 
+              name="company" 
+              placeholder="Filter by company..."
+              value="<%= company || '' %>"
+              class="w-full px-3 py-2 border border-gray-300 rounded text-sm"
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 items-center">
+        <button 
+          type="submit" 
+          class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium relative"
+          id="submitButton"
+        >
+          <span id="buttonText">
+            <%= searchByImage ? 'Search by Image' : 'Search Alumni' %>
+          </span>
+          <div id="buttonSpinner" class="hidden absolute inset-0 flex items-center justify-center">
+            <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+          </div>
+        </button>
+        
+        <button 
+          type="button" 
+          onclick="clearSearch()" 
+          class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+        >
+          Clear
+        </button>
+      </div>
+    </form>
+  </div>
+  </form>
+  </div>
+
+  <!-- Search Tips -->
+  <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+    <h3 class="text-lg font-semibold text-blue-800 mb-3">💡 Search Tips</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <h4 class="font-medium text-blue-700 mb-2">Text Search:</h4>
+        <ul class="text-blue-700 text-sm space-y-1">
+          <li>• Use specific names, emails, or companies</li>
+          <li>• Try partial matches (e.g., "micro" for Microsoft)</li>
+          <li>• Combine with department/year filters</li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-medium text-blue-700 mb-2">Image Search:</h4>
+        <ul class="text-blue-700 text-sm space-y-1">
+          <li>• Upload clear face photos for best results</li>
+          <li>• Use front-facing portraits</li>
+          <li>• Avoid group photos or distant shots</li>
+        </ul>
       </div>
     </div>
+  </div>
+</div>
 
+<script>
+  function toggleSearchType() {
+    const searchByImage = document.querySelector('input[name="searchByImage"][value="true"]').checked;
+    const textSearch = document.getElementById('textSearch');
+    const imageSearch = document.getElementById('imageSearch');
+    const form = document.querySelector('form');
+    const submitButton = document.getElementById('submitButton');
+    
+    // Toggle visibility
+    textSearch.style.display = searchByImage ? 'none' : 'block';
+    imageSearch.style.display = searchByImage ? 'block' : 'none';
+    
+    // Change form method and enctype
+    form.method = searchByImage ? 'POST' : 'GET';
+    form.enctype = searchByImage ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
+    
+    // Update button text
+    submitButton.textContent = searchByImage ? 'Search by Image' : 'Search Alumni';
+    
+    // Clear image preview when switching away from image search
+    if (!searchByImage) {
+      clearImagePreview();
+    }
+  }
+
+  function clearSearch() {
+    const form = document.querySelector('form');
+    form.reset();
+    clearImagePreview();
+    
+    // Reset to text search by default
+    document.querySelector('input[name="searchByImage"][value="false"]').checked = true;
+    toggleSearchType();
+  }
+
+  function clearImagePreview() {
+    const preview = document.getElementById('preview');
+    const imagePreview = document.getElementById('imagePreview');
+    const fileInput = document.getElementById('searchImageInput');
+    
+    preview.src = '';
+    imagePreview.classList.add('hidden');
+    fileInput.value = '';
+  }
+
+  // Image preview functionality
+  document.getElementById('searchImageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('preview');
+    const imagePreview = document.getElementById('imagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.src = e.target.result;
+        imagePreview.classList.remove('hidden');
+      }
+      reader.readAsDataURL(file);
+    } else {
+      clearImagePreview();
+    }
+  });
+
+  // Form validation
+ document.getElementById('searchForm').addEventListener('submit', function(e) {
+    const searchByImage = document.querySelector('input[name="searchByImage"][value="true"]').checked;
+    const fileInput = document.getElementById('searchImageInput');
+    
+    if (searchByImage && !fileInput.files[0]) {
+      e.preventDefault();
+      alert('Please select an image to search with.');
+      fileInput.focus();
+      return;
+    }
+
+    // Show loading state
+    const submitButton = document.getElementById('submitButton');
+    const buttonText = document.getElementById('buttonText');
+    const buttonSpinner = document.getElementById('buttonSpinner');
+    
+    submitButton.disabled = true;
+    buttonText.classList.add('opacity-0');
+    buttonSpinner.classList.remove('hidden');
+    
+    // Change button text based on search type
+    const searchType = searchByImage ? 'Searching by Image...' : 'Searching Alumni...';
+    buttonText.textContent = searchType;
+    
+    // Allow the form to submit normally
+    // The loading state will persist until page reloads
+  });
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleSearchType();
+    
+    // Re-enable button if page reloads due to error
+    const submitButton = document.getElementById('submitButton');
+    const buttonText = document.getElementById('buttonText');
+    const buttonSpinner = document.getElementById('buttonSpinner');
+    
+    submitButton.disabled = false;
+    buttonText.classList.remove('opacity-0');
+    buttonSpinner.classList.add('hidden');
+    
+    // Reset button text based on current search type
+    const searchByImage = document.querySelector('input[name="searchByImage"][value="true"]').checked;
+    buttonText.textContent = searchByImage ? 'Search by Image' : 'Search Alumni';
+  });
+</script>
+
+<style>
+  input[type="file"]::file-selector-button {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    margin-right: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  input[type="file"]::file-selector-button:hover {
+    background: #e5e7eb;
+  }
+
+  #imagePreview img {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
 
 <%- include('../../partials/footer') %>
