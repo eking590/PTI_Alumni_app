@@ -1,6 +1,6 @@
 <%- include('../../partials/header') %>
 
-<h3>Add New Alumni</h3>
+<!-- <h3>Add New Alumni</h3>
 <form action="/alumni/register" method="POST" enctype="multipart/form-data">
   <div>
     <label for="firstName">First Name:</label>
@@ -67,6 +67,330 @@
     <input type="file" id="image" name="image" accept="image/*">
   </div>
   <button type="submit">Add Alumni</button>
-</form>
+</form> -->
+
+
+<div class="registration-container">
+  <h3>Add New Alumni</h3>
+  
+  <!-- Success Message -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert success" id="successMessage">
+      ✅ Alumni registered successfully! 
+      <span id="countdown">Redirecting to login in 5 seconds...</span>
+    </div>
+  <% } %>
+
+  <!-- Error Message -->
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert error" id="errorMessage">
+      ❌ <%= error %>
+    </div>
+  <% } %>
+
+  <form action="/alumni/register" method="POST" enctype="multipart/form-data" id="registrationForm">
+    <div class="form-grid">
+      <div>
+        <label for="firstName">First Name:</label>
+        <input type="text" id="firstName" name="firstName" value="<%= typeof formData !== 'undefined' && formData.firstName ? formData.firstName : '' %>" required>
+      </div>
+      <div>
+        <label for="lastName">Last Name:</label>
+        <input type="text" id="lastName" name="lastName" value="<%= typeof formData !== 'undefined' && formData.lastName ? formData.lastName : '' %>" required>
+      </div>
+      <div>
+        <label for="department">Department:</label>
+        <input type="text" id="department" name="department" value="<%= typeof formData !== 'undefined' && formData.department ? formData.department : '' %>" required>
+      </div>
+      <div>
+        <label for="matNo">Mat No:</label>
+        <input type="text" id="matNo" name="matNo" value="<%= typeof formData !== 'undefined' && formData.matNo ? formData.matNo : '' %>" required>
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <div class="password-strength" id="passwordStrength"></div>
+      </div>
+      <div>
+        <label for="graduationYear">Graduation Year:</label>
+        <input type="date" id="graduationYear" name="graduationYear" value="<%= typeof formData !== 'undefined' && formData.graduationYear ? formData.graduationYear : '' %>">
+      </div>
+      <div>
+        <label for="degree">Degree:</label>
+        <input type="text" id="degree" name="degree" value="<%= typeof formData !== 'undefined' && formData.degree ? formData.degree : '' %>">
+      </div>
+      <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" required>
+      </div>
+      <div>
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" value="<%= typeof formData !== 'undefined' && formData.location ? formData.location : '' %>">
+      </div>
+      <div>
+        <label for="currentPosition">Current Position:</label>
+        <input type="text" id="currentPosition" name="currentPosition" value="<%= typeof formData !== 'undefined' && formData.currentPosition ? formData.currentPosition : '' %>">
+      </div>
+      <div>
+        <label for="company">Company:</label>
+        <input type="text" id="company" name="company" value="<%= typeof formData !== 'undefined' && formData.company ? formData.company : '' %>">
+      </div>
+      <div>
+        <label for="linkedInProfile">LinkedIn Profile:</label>
+        <input type="url" id="linkedInProfile" name="linkedInProfile" value="<%= typeof formData !== 'undefined' && formData.linkedInProfile ? formData.linkedInProfile : '' %>">
+      </div>
+      <div>
+        <label for="facebookProfile">Facebook Profile:</label>
+        <input type="url" id="facebookProfile" name="facebookProfile" value="<%= typeof formData !== 'undefined' && formData.facebookProfile ? formData.facebookProfile : '' %>">
+      </div>
+      <div>
+        <label for="xProfile">X Profile:</label>
+        <input type="url" id="xProfile" name="xProfile" value="<%= typeof formData !== 'undefined' && formData.xProfile ? formData.xProfile : '' %>">
+      </div>
+      <div class="full-width">
+        <label for="achievements">Achievements (comma separated):</label>
+        <textarea id="achievements" name="achievements"><%= typeof formData !== 'undefined' && formData.achievements ? formData.achievements : '' %></textarea>
+      </div>
+      <div class="full-width">
+        <label for="image">Profile Image:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <div id="imagePreview" class="image-preview"></div>
+      </div>
+    </div>
+
+    <button type="submit" id="submitButton">
+      Add Alumni
+    </button>
+
+     <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-text">Registering Alumni...</div>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+     <!-- Success Confetti Animation -->
+    <div id="confettiCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none;"></div>
+  </form>
+</div>
+
+<script>
+  
+   document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    const submitButton = document.getElementById('submitButton');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const successMessage = document.getElementById('successMessage');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('imagePreview');
+    const passwordInput = document.getElementById('password');
+    const passwordStrength = document.getElementById('passwordStrength');
+    const confettiCanvas = document.getElementById('confettiCanvas');
+
+    // Image preview functionality
+    imageInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.innerHTML = `<img src="${e.target.result}" alt="Image preview">`;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imagePreview.innerHTML = 'No image selected';
+      }
+    });
+
+    // Password strength indicator
+    passwordInput.addEventListener('input', function() {
+      const password = this.value;
+      let strength = 0;
+      
+      if (password.length >= 8) strength++;
+      if (/[A-Z]/.test(password)) strength++;
+      if (/[0-9]/.test(password)) strength++;
+      if (/[^A-Za-z0-9]/.test(password)) strength++;
+      
+      const colors = ['#dc3545', '#ffc107', '#17a2b8', '#28a745'];
+      const width = (strength / 4) * 100;
+      
+      passwordStrength.style.width = width + '%';
+      passwordStrength.style.background = colors[strength - 1] || '#e5e7eb';
+    });
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Show loading overlay
+      loadingOverlay.style.display = 'flex';
+      submitButton.disabled = true;
+      submitButton.textContent = 'Registering...';
+      
+      // Simulate processing animation
+      let dots = 0;
+      const dotInterval = setInterval(() => {
+        dots = (dots + 1) % 4;
+        submitButton.textContent = 'Registering' + '.'.repeat(dots);
+      }, 500);
+      
+      // Submit the form after a brief animation
+      setTimeout(() => {
+        clearInterval(dotInterval);
+        
+        // Show success celebration before actual form submission
+        showSuccessCelebration();
+        
+        // Submit the form after celebration
+        setTimeout(() => {
+          form.submit();
+        }, 3000); // Wait for celebration to finish
+        
+      }, 2000);
+    });
+
+    // Success celebration function
+    function showSuccessCelebration() {
+      // Create success overlay
+      const successOverlay = document.createElement('div');
+      successOverlay.className = 'success-celebration';
+      successOverlay.innerHTML = `
+        <div class="success-icon">🎉</div>
+        <div class="success-message">Registered Successfully!</div>
+        <div class="success-submessage">Your alumni account has been created</div>
+        <div style="font-size: 0.9rem; color: #6c757d;">You will be redirected shortly...</div>
+      `;
+      
+      document.body.appendChild(successOverlay);
+      
+      // Create confetti effect
+      createConfetti();
+      
+      // Add celebration sound (optional)
+      playSuccessSound();
+    }
+
+    // Confetti effect
+    function createConfetti() {
+      confettiCanvas.style.display = 'block';
+      const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+      
+      for (let i = 0; i < 150; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.top = '-10px';
+        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+        confettiCanvas.appendChild(confetti);
+        
+        // Animate confetti
+        animateConfetti(confetti);
+      }
+    }
+
+    function animateConfetti(confetti) {
+      const duration = Math.random() * 3000 + 2000;
+      const horizontalMovement = (Math.random() - 0.5) * 200;
+      
+      confetti.animate([
+        {
+          top: '-10px',
+          transform: 'rotate(0deg)',
+          opacity: 1
+        },
+        {
+          top: '100vh',
+          transform: `rotate(${Math.random() * 720}deg) translateX(${horizontalMovement}px)`,
+          opacity: 0
+        }
+      ], {
+        duration: duration,
+        easing: 'cubic-bezier(0.1, 0.8, 0.1, 1)'
+      });
+      
+      // Remove confetti after animation
+      setTimeout(() => {
+        confetti.remove();
+      }, duration);
+    }
+
+    // Success sound (optional)
+    function playSuccessSound() {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } catch (error) {
+        console.log('Audio not supported or blocked');
+      }
+    }
+
+    // Success message countdown (for page reload success)
+    if (successMessage) {
+      let countdown = 5;
+      const countdownElement = document.getElementById('countdown');
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = `Redirecting to login in ${countdown} seconds...`;
+        
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          window.location.href = '/alumni/login';
+        }
+      }, 1000);
+      
+      // Add pulse animation to success message
+      successMessage.classList.add('success-pulse');
+      
+      // Also show confetti for page reload success
+      createConfetti();
+    }
+
+    // Form validation
+    const requiredFields = form.querySelectorAll('[required]');
+    requiredFields.forEach(field => {
+      field.addEventListener('blur', validateField);
+    });
+
+    function validateField(e) {
+      const field = e.target;
+      if (field.value.trim() === '') {
+        field.style.borderColor = '#dc3545';
+      } else {
+        field.style.borderColor = '#28a745';
+      }
+    }
+
+    // Add input animations
+    const inputs = form.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+      input.addEventListener('focus', function() {
+        this.parentElement.style.transform = 'translateY(-2px)';
+        this.parentElement.style.transition = 'transform 0.2s ease';
+      });
+      
+      input.addEventListener('blur', function() {
+        this.parentElement.style.transform = 'translateY(0)';
+      });
+    });
+  });
+</script>
 
 <%- include('../../partials/footer') %>
