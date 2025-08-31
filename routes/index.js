@@ -6,13 +6,16 @@ import {
   getAllAlumni,
   //addAlumni,
   getAlumniDashboard,
+  getSearchAlumniPage,
+  uploadSearchImage,
   searchAlumni,
+  processAlumniImages,
   getEditAlumni,
   updateAlumni,
   deleteAlumni, 
   getAlumniLogin, postAlumniLogin,
-  getAlumniRegister, postAlumniRegister,
-  getSearchAlumniPage
+  getAlumniRegister, postAlumniRegister
+  //getSearchAlumniPage
 } from '../controllers/alumniController.js';
 import { ensureAuthenticated, ensureAlumniAuthenticated } from '../middlewares/auth.js';
 
@@ -28,6 +31,8 @@ const storage = multer.diskStorage({
   }
 });
 const upload = multer({ storage });
+
+
 
 // Admin routes
 router.get('/login', getLogin);
@@ -64,7 +69,17 @@ router.post('/alumni/register', upload.single('image'),
   postAlumniRegister
 );
 
+// GET - Display search form
+router.get('/search', getSearchAlumniPage);
 
+// POST - Handle form submission (both text and image search)
+router.post('/search', uploadSearchImage, searchAlumni);
+
+// POST - Handle form submission (both text and image search)
+router.get('/process-images', processAlumniImages);
+
+// GET - Handle text-only searches (optional)
+router.get('/search/results', searchAlumni);
 
 //router.post('/alumni/register', postAlumniRegister);
 
