@@ -13,7 +13,24 @@ const alumniSchema = new Schema({
   company: { type: String },
   location: { type: String },
   email: { type: String, unique: false },
-  image: { type: String },
+  image: { type: String },  // URL or path to stored image
+  imageFeatures: {
+    type: [Number], // Array of numbers for feature vector
+    default: []
+  },
+  imageHash: {
+    type: String, // Perceptual hash for quick comparison
+    default: ''
+  },
+  imageMetadata: {
+    dominantColors: [String],
+    imageType: String,
+    size: Number,
+    dimensions: {
+      width: Number,
+      height: Number
+    }
+  },
   socialMedia: {
     linkedIn: String,
     facebook: String,
