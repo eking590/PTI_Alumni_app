@@ -3,7 +3,7 @@
 
 import Alumni from '../models/Alumni.js';
 import bcrypt from 'bcryptjs';
-import ImageProcessor from '../config/ImageProcessor.js'; 
+import ImageProcessor from '../config/imageProcessor.js'; 
 import path from 'path';
 import upload from '../middlewares/upload.js';
 import fs from 'fs';
@@ -1316,5 +1316,6 @@ export const processExistingAlumniImages = async (req, res) => {
     });
   }
 };
+
 
 
