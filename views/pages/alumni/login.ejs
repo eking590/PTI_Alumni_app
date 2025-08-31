@@ -1,6 +1,6 @@
 <%- include('../../partials/header') %>
 
-<div class="login-container">
+<!-- <div class="login-container">
   <h2>Alumni Login</h2>
   
   <% if (typeof error !== 'undefined' && error) { %>
@@ -23,6 +23,154 @@
     <p>Don't have an account? <a href="/alumni/register">Register here</a></p>
     <p>Forgot password? <a href="/alumni/forgot-password">Reset it</a></p>
   </div>
-</div>
+</div> -->
 
+
+<div class="login-container">
+  <h2>Alumni Login</h2>
+  
+  <!-- Success Message -->
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert success" id="successMessage">
+      Registration successful! Please login with your credentials.
+    </div>
+  <% } %>
+
+  <!-- Error Message -->
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert error" id="errorMessage">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <form action="/alumni/login" method="POST" id="loginForm">
+    <div>
+      <label for="email">Email:</label>
+      <input 
+        type="email" 
+        id="email" 
+        name="email" 
+        value="<%= typeof email !== 'undefined' ? email : '' %>" 
+        required
+      >
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input 
+        type="password" 
+        id="password" 
+        name="password" 
+        required
+      >
+    </div>
+    <button type="submit" id="loginButton">
+      Login
+    </button>
+    
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+      <div class="spinner"></div>
+      <span>Logging in...</span>
+    </div>
+  </form>
+  <div class="login-links">
+    <p>Don't have an account? <a href="/alumni/register">Register here</a></p>
+    <!-- <p>Forgot password? <a href="/alumni/forgot-password">Reset it</a></p> -->
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    // Animate success message if present
+    if (successMessage) {
+      successMessage.classList.add('success-animation');
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        successMessage.style.opacity = '0';
+        successMessage.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => {
+          successMessage.style.display = 'none';
+        }, 500);
+      }, 5000);
+    }
+
+    // Animate error message if present
+    if (errorMessage) {
+      errorMessage.classList.add('success-animation');
+    }
+
+    loginForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Show loading state
+      loginButton.disabled = true;
+      loginButton.textContent = 'Processing...';
+      loadingSpinner.style.display = 'flex';
+      
+      // Get form data
+      const formData = new FormData(loginForm);
+      const email = formData.get('email');
+      const password = formData.get('password');
+      
+      // Simulate login process (replace with actual fetch if using AJAX)
+      console.log('Logging in with:', { email, password });
+       this.submit();
+    });
+     function showSuccess(message) {
+      // Create success message
+      const successDiv = document.createElement('div');
+      successDiv.className = 'alert success success-animation';
+      successDiv.textContent = message;
+      loginForm.insertBefore(successDiv, loginForm.firstChild);
+      
+      // Remove message after 3 seconds
+      setTimeout(() => {
+        successDiv.remove();
+      }, 3000);
+    }
+
+    function showError(message) {
+      // Remove existing error messages
+      const existingError = document.querySelector('.alert.error');
+      if (existingError) {
+        existingError.remove();
+      }
+      
+      // Create error message
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert error success-animation';
+      errorDiv.textContent = message;
+      loginForm.insertBefore(errorDiv, loginForm.firstChild);
+    }
+
+    function resetForm() {
+      loginButton.disabled = false;
+      loginButton.textContent = 'Login';
+      loadingSpinner.style.display = 'none';
+    }
+
+    // Add input validation
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+
+    emailInput.addEventListener('input', validateForm);
+    passwordInput.addEventListener('input', validateForm);
+
+    function validateForm() {
+      const isEmailValid = emailInput.value.includes('@');
+      const isPasswordValid = passwordInput.value.length >= 6;
+      
+      loginButton.disabled = !(isEmailValid && isPasswordValid);
+    }
+
+    // Initial validation
+    validateForm();
+  });
+  </script>
 <%- include('../../partials/footer') %>
