@@ -5,8 +5,8 @@
   <div class="bg-white p-6 rounded-lg shadow mb-8">
     <h2 class="text-2xl font-bold mb-4">Search Alumni</h2>
     
-    <!-- Switch between POST for image upload and GET for text search -->
-    <form action="/search" method="<%= searchByImage ? 'POST' : 'GET' %>" enctype="<%= searchByImage ? 'multipart/form-data' : 'application/x-www-form-urlencoded' %>" class="space-y-4">
+    <!-- Updated form action to use the correct route for text search -->
+    <form id="searchForm" action="<%= searchByImage ? '/search' : '/search/results' %>" method="<%= searchByImage ? 'POST' : 'GET' %>" enctype="<%= searchByImage ? 'multipart/form-data' : 'application/x-www-form-urlencoded' %>" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Search Type Toggle -->
         <div>
@@ -174,8 +174,6 @@
       </div>
     </form>
   </div>
-  </form>
-  </div>
 
   <!-- Search Tips -->
   <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
@@ -206,19 +204,20 @@
     const searchByImage = document.querySelector('input[name="searchByImage"][value="true"]').checked;
     const textSearch = document.getElementById('textSearch');
     const imageSearch = document.getElementById('imageSearch');
-    const form = document.querySelector('form');
-    const submitButton = document.getElementById('submitButton');
+    const form = document.getElementById('searchForm');
+    const buttonText = document.getElementById('buttonText');
     
     // Toggle visibility
     textSearch.style.display = searchByImage ? 'none' : 'block';
     imageSearch.style.display = searchByImage ? 'block' : 'none';
     
-    // Change form method and enctype
+    // Change form method, action, and enctype
     form.method = searchByImage ? 'POST' : 'GET';
+    form.action = searchByImage ? '/search' : '/search/results';
     form.enctype = searchByImage ? 'multipart/form-data' : 'application/x-www-form-urlencoded';
     
     // Update button text
-    submitButton.textContent = searchByImage ? 'Search by Image' : 'Search Alumni';
+    buttonText.textContent = searchByImage ? 'Search by Image' : 'Search Alumni';
     
     // Clear image preview when switching away from image search
     if (!searchByImage) {
@@ -227,7 +226,7 @@
   }
 
   function clearSearch() {
-    const form = document.querySelector('form');
+    const form = document.getElementById('searchForm');
     form.reset();
     clearImagePreview();
     
@@ -265,7 +264,7 @@
   });
 
   // Form validation
- document.getElementById('searchForm').addEventListener('submit', function(e) {
+  document.getElementById('searchForm').addEventListener('submit', function(e) {
     const searchByImage = document.querySelector('input[name="searchByImage"][value="true"]').checked;
     const fileInput = document.getElementById('searchImageInput');
     
