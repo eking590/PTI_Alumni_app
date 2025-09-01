@@ -5,17 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> | PTI Alumni Management</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
 </head>
 <body>
   <header>
-    <h1> PTI Alumni Management System</h1>
+    <div class="header-container">
+      <div class="logo-container">
+    <img src="/images/pti-logo.png" alt="PTI Logo" class="logo">
+      </div>
+       <div class="header-content">
+        <h1> PTI Alumni Management System</h1> 
+         <div class="subtitle">Connecting alumni across generations</div>
+      </div>
+    </div>
+  </header>
+
     <nav>
       <% if (typeof admin !== 'undefined' && admin) { %>
         <a href="/alumni">All Alumni</a>
         <a href="/alumni/search">Search</a>
         <a href="/logout">Logout</a>
-      <% } else { %>
-        <a href="/login">Login</a>
       <% } %>
     </nav>
   </header>
