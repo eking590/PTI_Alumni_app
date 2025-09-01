@@ -5,26 +5,30 @@
     <% if (searchByImage) { %>
       Image Search Results
     <% } else { %>
-      Search Results for "<%= query %>"
+      <% if (typeof query !== 'undefined' && query) { %>
+        Search Results for "<%= query %>"
+      <% } else { %>
+        Search Results
+      <% } %>
     <% } %>
   </h2>
 
   <!-- Image Search Results Header -->
-  <% if (searchByImage && localResults.length === 0) { %>
+  <% if (searchByImage && typeof localResults !== 'undefined' && localResults.length === 0) { %>
     <div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200 mb-6">
       <h3 class="text-lg font-semibold text-yellow-800 mb-2">Image Search Results</h3>
       <p class="text-yellow-700">
         No similar images found in our database. Try with a different image or use text search.
       </p>
       <div class="mt-3">
-        <a href="alumni/search-form" class="text-blue-600 hover:text-blue-800 font-medium">
+        <a href="/alumni/search-form" class="text-blue-600 hover:text-blue-800 font-medium">
           ← Back to search
         </a>
       </div>
     </div>
   <% } %>
 
-  <% if (searchByImage && localResults.length > 0) { %>
+  <% if (searchByImage && typeof localResults !== 'undefined' && localResults.length > 0) { %>
     <div class="bg-green-50 p-4 rounded-lg border border-green-200 mb-6">
       <p class="text-green-700 font-medium">
         Found <%= localResults.length %> similar image(s) with similarity scores:
@@ -44,31 +48,31 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div class="bg-white p-4 rounded-lg shadow text-center">
       <h3 class="text-sm font-semibold text-gray-600">Total Results</h3>
-      <p class="text-2xl font-bold"><%= totalResults || 0 %></p>
+      <p class="text-2xl font-bold"><%= typeof totalResults !== 'undefined' ? totalResults : 0 %></p>
     </div>
     <div class="bg-white p-4 rounded-lg shadow text-center">
       <h3 class="text-sm font-semibold text-gray-600">Results with Images</h3>
-      <p class="text-2xl font-bold"><%= resultsWithImages || 0 %></p>
+      <p class="text-2xl font-bold"><%= typeof resultsWithImages !== 'undefined' ? resultsWithImages : 0 %></p>
       <p class="text-sm text-gray-500">
-        (<%= Math.round(((resultsWithImages || 0) / (totalResults || 1)) * 100) %>%)
+        (<%= Math.round(((typeof resultsWithImages !== 'undefined' ? resultsWithImages : 0) / (typeof totalResults !== 'undefined' && totalResults > 0 ? totalResults : 1)) * 100) %>%)
       </p>
     </div>
     <div class="bg-white p-4 rounded-lg shadow text-center">
       <h3 class="text-sm font-semibold text-gray-600">Image Coverage</h3>
       <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
         <div class="bg-blue-600 h-2 rounded-full" 
-             style="width: <%= Math.round(((resultsWithImages || 0) / (totalResults || 1)) * 100) %>%"></div>
+             style="width: <%= Math.round(((typeof resultsWithImages !== 'undefined' ? resultsWithImages : 0) / (typeof totalResults !== 'undefined' && totalResults > 0 ? totalResults : 1)) * 100) %>%"></div>
       </div>
     </div>
   </div>
 
   <!-- Error Message for Image Search -->
-  <% if (error) { %>
+  <% if (typeof error !== 'undefined' && error) { %>
     <div class="bg-red-50 p-4 rounded-lg border border-red-200 mb-6">
       <h3 class="text-lg font-semibold text-red-800 mb-2">Search Error</h3>
       <p class="text-red-700"><%= error %></p>
       <div class="mt-2">
-        <a href="alumni/search-form" class="text-blue-600 hover:text-blue-800 font-medium">
+        <a href="/alumni/search-form" class="text-blue-600 hover:text-blue-800 font-medium">
           ← Try again
         </a>
       </div>
@@ -80,10 +84,10 @@
     <div class="bg-white p-6 rounded-lg shadow">
       <h3 class="text-xl font-semibold mb-4 border-b pb-2">
         Alumni Matches 
-        <span class="text-sm font-normal text-gray-500">(<%= localResults.length %> found)</span>
+        <span class="text-sm font-normal text-gray-500">(<%= typeof localResults !== 'undefined' ? localResults.length : 0 %> found)</span>
       </h3>
       
-      <% if (localResults && localResults.length > 0) { %>
+      <% if (typeof localResults !== 'undefined' && localResults.length > 0) { %>
         <div class="space-y-4">
           <% localResults.forEach(alum => { %>
             <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -158,13 +162,13 @@
     <!-- AI Insights & Analysis -->
     <div class="space-y-6">
       <!-- Mistral API Results -->
-      <% if (!searchByImage || localResults.length > 0) { %>
+      <% if (!searchByImage || (typeof localResults !== 'undefined' && localResults.length > 0)) { %>
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="text-xl font-semibold mb-4 border-b pb-2">AI Search Insights</h3>
           
           <% 
             let mistralContent = '';
-            if (apiResults && apiResults.choices && apiResults.choices.length > 0) {
+            if (typeof apiResults !== 'undefined' && apiResults.choices && apiResults.choices.length > 0) {
               mistralContent = apiResults.choices[0].message.content;
               
               mistralContent = mistralContent
@@ -190,14 +194,14 @@
       <% } %>
 
       <!-- Image Analysis -->
-      <% if (hasImages && imageAnalysis && (!searchByImage || localResults.length > 0)) { %>
+      <% if (typeof hasImages !== 'undefined' && hasImages && typeof imageAnalysis !== 'undefined' && imageAnalysis && (!searchByImage || (typeof localResults !== 'undefined' && localResults.length > 0))) { %>
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="text-xl font-semibold mb-4 border-b pb-2">Profile Image Analysis</h3>
           <div class="prose max-w-none text-gray-700">
             <p><%= imageAnalysis.choices[0].message.content %></p>
           </div>
         </div>
-      <% } else if (!hasImages && localResults.length > 0 && !searchByImage) { %>
+      <% } else if (typeof hasImages !== 'undefined' && !hasImages && typeof localResults !== 'undefined' && localResults.length > 0 && !searchByImage) { %>
         <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
           <h3 class="text-lg font-semibold text-yellow-800 mb-2">Image Analysis</h3>
           <p class="text-yellow-700">No profile images available for analysis in these results.</p>
@@ -205,7 +209,7 @@
       <% } %>
 
       <!-- Department Analysis -->
-      <% if (typeof departmentImageAnalysis !== 'undefined' && departmentImageAnalysis && (!searchByImage || localResults.length > 0)) { %>
+      <% if (typeof departmentImageAnalysis !== 'undefined' && departmentImageAnalysis && (!searchByImage || (typeof localResults !== 'undefined' && localResults.length > 0))) { %>
         <div class="bg-white p-6 rounded-lg shadow">
           <h3 class="text-xl font-semibold mb-4 border-b pb-2">Department Insights</h3>
           <div class="prose max-w-none text-gray-700">
@@ -222,7 +226,7 @@
       <% if (searchByImage) { %>
         <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
           <h3 class="text-lg font-semibold text-gray-800 mb-3">Search Again</h3>
-          <a href="alumni/search-form" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium inline-block">
+          <a href="/alumni/search-form" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium inline-block">
             New Search
           </a>
           <p class="text-sm text-gray-600 mt-2">
