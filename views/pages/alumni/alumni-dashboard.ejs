@@ -15,8 +15,43 @@
     <div class="profile-info">
       <h3>Your Information</h3>
       <p><strong>Name:</strong> <%= alumni.firstName %> <%= alumni.lastName %></p>
-      <p><strong>Graduation Year:</strong> <%= alumni.graduationYear %></p>
-      <p><strong>Degree:</strong> <%= alumni.degree %></p>
+      <p><strong>Department:</strong> <%= alumni.department %></p>
+      <!-- Fixed graduation year display with proper date parsing -->
+<!-- Graduation Year with multiple fallback options -->
+        <% if (alumni.graduationYear) { 
+          let gradYear = alumni.graduationYear;
+          // Try to parse as date if it's a string
+          if (typeof gradYear === 'string') {
+            try {
+            gradYear = new Date(gradYear).getFullYear();
+          } catch (e) {
+            // If parsing fails, try to extract year from string
+            const yearMatch = gradYear.match(/\b(20\d{2})\b/);
+            if (yearMatch) {
+              gradYear = yearMatch[1];
+            }
+          }
+        } else if (gradYear instanceof Date) {
+          gradYear = gradYear.getFullYear();
+        }
+      %>
+        <p><strong>Graduation Year:</strong> <%= gradYear %></p>
+      <% } else if (alumni.gradYear) { %>
+        <p><strong>Graduation Year:</strong> <%= alumni.gradYear %></p>
+      <% } else if (alumni.year) { %>
+        <p><strong>Graduation Year:</strong> <%= alumni.year %></p>
+      <% } else { %>
+        <p><strong>Graduation Year:</strong> <span class="text-muted">Not specified</span></p>
+      <% } %>
+      
+      
+       <!-- Degree display with better null checking -->
+      <% if (alumni.degree && alumni.degree.trim() !== '') { %>
+        <p><strong>Degree:</strong> <%= alumni.degree %></p>
+      <% } else { %>
+        <p><strong>Degree:</strong> <span class="text-muted">Not specified</span></p>
+      <% } %>
+      
       <p><strong>Email:</strong> <%= alumni.email %></p>
       <% if (alumni.currentJob) { %>
         <p><strong>Current Job:</strong> <%= alumni.currentJob %></p>
@@ -32,12 +67,11 @@
   <div class="alumni-actions">
     <h3>Quick Links</h3>
     <div class="action-buttons">
-      <a href="/alumni/events" class="button">Upcoming Events</a>
-      <a href="/alumni/network" class="button">Alumni Network</a>
-      <a href="/alumni/jobs" class="button">Job Board</a>
       <a href="/alumni/login" class="button">Logout</a>
     </div>
   </div>
 </div>
+
+
 
 <%- include('../../partials/footer') %>
