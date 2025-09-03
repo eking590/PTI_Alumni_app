@@ -3,13 +3,16 @@
 
 import Alumni from '../models/Alumni.js';
 import bcrypt from 'bcryptjs';
-import ImageProcessor from '../config/imageProcessor.js'; 
+import ImageProcessor from '../config/ImageProcessor.js'; 
 import path from 'path';
 import upload from '../middlewares/upload.js';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import axios from 'axios';
 import { cloudinary } from '../config/cloudinaryConfig.js';
 import { validationResult } from 'express-validator';
+import { generateToken } from "../middlewares/generateToken.js";
 
 
 
@@ -56,10 +59,14 @@ export const postAlumniLogin = async (req, res) => {
       email: alumni.email,
       firstName: alumni.firstName,
       lastName: alumni.lastName,
-      image: alumni.image
+      image: alumni.image,
+      graduationYear: alumni.graduationYear,
+      degree: alumni.degree,
+      department: alumni.department
     };
 
     console.log('Session created for:', alumni.email);
+    console.log('req.session.alumni:', req.session.alumni.id);
     
     return res.redirect('/alumni/dashboard');
   } catch (err) {
@@ -72,84 +79,215 @@ export const postAlumniLogin = async (req, res) => {
   }
 };
 
+
+
+// export const getAlumniEdit = (req, res) => {
+//   return res.render('pages/alumni/edit-profile', { 
+//     title: 'Alumni Edit',
+//     error: null,
+//     alumni: req.session.alumni
+//   });
+// };
+export const getAlumniEdit = async (req, res) => {
+  try {
+    // Get the alumni ID from session or JWT
+    const alumniId = req.user?.id || req.session.alumni?.id;
+    
+    if (!alumniId) {
+      return res.status(401).render('pages/error', {
+        title: 'Error',
+        error: 'Please log in to edit your profile'
+      });
+    }
+
+    let alumni;
+    
+    // Try to fetch from database first
+    try {
+      alumni = await Alumni.findById(alumniId);
+      
+      if (!alumni) {
+        console.log('Alumni not found in database with ID:', alumniId);
+        // Fall back to session data if database fetch fails
+        if (req.session.alumni) {
+          console.log('Using session data as fallback');
+          alumni = req.session.alumni;
+        } else {
+          throw new Error('Alumni not found');
+        }
+      }
+    } catch (dbError) {
+      console.log('Database fetch failed, using session data:', dbError.message);
+      // Use session data as fallback
+      if (req.session.alumni) {
+        alumni = req.session.alumni;
+      } else {
+        throw new Error('No alumni data available');
+      }
+    }
+
+    // Render the edit form
+    return res.render('pages/alumni/edit-profile', { 
+      title: 'Edit Profile',
+      error: null,
+      alumni: req.user ? req.user : alumni // Use req.user if available, else fallback
+    });
+    
+  } catch (err) {
+    console.error('Error in getAlumniEdit:', err);
+    return res.status(500).render('pages/error', {
+      title: 'Error',
+      error: 'Failed to load edit profile page: ' + err.message
+    });
+  }
+};
+
+export const Alumnilogin = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+      // Trim and lowercase email for consistency
+      const normalizedEmail = email.toLowerCase().trim();
+
+  
+      const alumni = await Alumni.findOne({  email: normalizedEmail  });
+    if (!alumni) {
+      return res.status(401).render('pages/alumni/login', { 
+        title: 'Alumni Login',
+        error: 'Invalid email',
+        email: email 
+      });
+    }
+        // Debug: Check what's being compareds
+    console.log('Input password:', password);
+    console.log('Stored hash:', alumni.password);
+    console.log('Alumni found:', alumni.email);
+
+      const isMatch = await bcrypt.compare(password, alumni.password);
+      if (!isMatch) {
+        return res.status(401).render('pages/alumni/login', { 
+          title: 'Alumni Login',
+          error: 'Invalid Password' 
+      });
+    }
+
+      const token = jwt.sign({ id: alumni._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+     // Set alumni data in session (like postAlumniLogin does)
+      req.session.alumni = {
+        id: alumni._id,
+        email: alumni.email,
+        firstName: alumni.firstName,
+        lastName: alumni.lastName,
+        image: alumni.image,
+        graduationYear: alumni.graduationYear,
+        degree: alumni.degree,
+        department: alumni.department
+    };
+    console.log('Session created for:', alumni.email);
+    console.log('req.session.alumni:', req.session.alumni.id);
+    console.log('JWT Token generated');
+        
+      return res.redirect('/alumni/dashboard');
+    } catch (err) {
+      console.error(err)
+      return res.status(500).render('pages/alumni/login', {
+        title: 'Alumni Login',
+        error: 'server error',
+        email: email 
+      });
+    }
+  };
+
+// Update your postAlumniLogin controller
+
+
+
+// export const postAlumniLogin = async (req, res) => {
+//   const { email, password } = req.body;
+  
+//   try {
+//     // Trim and lowercase email for consistency
+//     const normalizedEmail = email.toLowerCase().trim();
+
+//     const alumni = await Alumni.findOne({ email: normalizedEmail });
+//     if (!alumni) {
+//       return res.status(401).render('pages/alumni/login', { 
+//         title: 'Alumni Login',
+//         error: 'Invalid credentials',
+//         email: email 
+//       });
+//     }
+
+//     const isMatch = await bcrypt.compare(password, alumni.password);
+//     if (!isMatch) {
+//       return res.status(401).render('pages/alumni/login', { 
+//         title: 'Alumni Login',
+//         error: 'Invalid credentials', 
+//         email: email 
+//       });
+//     }
+
+//     // Store only the ID in session (more efficient)
+//     req.session.alumniId = alumni._id.toString();
+    
+//     // Optional: Store minimal user info if needed
+//     req.session.user = {
+//       id: alumni._id.toString(),
+//       email: alumni.email,
+//       firstName: alumni.firstName,
+//       type: 'alumni'
+//     };
+
+//     console.log('Session created for alumni ID:', req.session.alumniId);
+    
+//     return res.redirect('/alumni/dashboard');
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).render('pages/alumni/login', { 
+//       title: 'Alumni Login',
+//       error: 'Server error',
+//       email: email 
+//     });
+//   }
+// };
+
+
+// export const postAlumniLogin = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     const alumni = await Alumni.findOne({ email });
+//     if (!alumni) return res.status(400).json({ message: "User not found" });
+
+//     const isMatch = await alumni.comparePassword(password);
+//     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+//     const token = generateToken(alumni);
+
+//     res.json({
+//       token,
+//       alumni: {
+//         id: alumni._id,
+//         firstName: alumni.firstName,
+//         lastName: alumni.lastName,
+//         email: alumni.email,
+//         image: alumni.image,
+//         graduationYear: alumni.graduationYear,
+//         degree: alumni.degree,
+//         department: alumni.department
+//       }
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
 export const alumniLogout = (req, res) => {
   req.session.destroy();
   res.redirect('pages/alumni/login');
 };
 
 
-// export const getSearchAlumniPage = async (req, res) => {
-//    return res.render('pages/alumni/searchForm', {
-//     title: 'Search Alumni',
-//     alumni: req.session.alumni,
-//     query: req.query.query || '' // Pass query to the template, default to empty string
 
-//   });
-// }
-// export const getSearchAlumniPage = async (req, res) => {
-//   return res.render('pages/alumni/searchForm', {
-//     title: 'Search Alumni',
-//     alumni: req.session.alumni,
-//     query: req.query.query || '',
-//     includeImageAnalysis: req.query.includeImageAnalysis === 'true',
-//     onlyWithImages: req.query.onlyWithImages === 'true',
-//     department: req.query.department || '',
-//     graduationYear: req.query.graduationYear || '',
-//     company: req.query.company || ''
-//   });
-// }
-// Search Alumni (local DB + Mistral API)
-// export const searchAlumni = async (req, res) => {
-//   try {
-//     const { query } = req.query;
-
-//     // Local database search
-//     const localResults = await Alumni.find({
-//       $or: [
-//         { firstName: { $regex: query, $options: 'i' } },
-//         { lastName: { $regex: query, $options: 'i' } },
-//         { email: { $regex: query, $options: 'i' } }
-//       ]
-//     });
-
-//     // Example: Mistral API search (replace with actual endpoint if needed)
-//     // const apiResults = await axios.get(`https://api.mistral.ai/search?q=${query}`, {
-//     //   headers: { 'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}` }
-//     // });
-
-//   const apiResults = await axios.post(
-//   'https://api.mistral.ai/v1/chat/completions',
-//   {
-//     model: 'mistral-medium',
-//     messages: [
-//       {
-//         role: 'user',
-//         content: `Provide suggestions for alumni profiles based on these search criteria: query: "${query || ''}".`
-//       }
-//     ],
-//     max_tokens: 100
-//   },
-//   {
-//     headers: {
-//       'Authorization': `Bearer ${process.env.MISTRAL_API_KEY}`,
-//       'Content-Type': 'application/json'
-//     }
-//   }
-// );
-
-//     res.render('pages/alumni/search-results', { 
-//       title: 'Search Results',
-//       localResults,
-//       apiResults: apiResults.data 
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).render('pages/error', { 
-//       title: 'Error',
-//       error: 'Failed to search alumni' 
-//     });
-//   }
-// };
 export const getSearchAlumniPage = async (req, res) => {
   return res.render('pages/alumni/searchForm', {
     title: 'Search Alumni',
@@ -908,13 +1046,146 @@ export const deleteAlumni = async (req, res) => {
   }
 };
 
-// Get Edit Alumni Page
+
+
+
+
+
+// export const getEditAlumni = async (req, res) => {
+//   try {
+//     let alumniId = req.params.id;
+//     console.log(req.session.alumni);
+//     // Get alumni ID from session if available
+//     const sessionAlumniId = req.session.alumni ? 
+//       (req.session.alumni.toString ? req.session.alumni.toString() : req.session.alumni) : 
+//       null;
+    
+//     // }
+//     // If alumni is accessing their own profile (not admin)
+//     if (sessionAlumniId && sessionAlumniId !== alumniId) {
+//       // Alumni can only edit their own profile, so redirect to their own edit page
+//       return res.redirect(`/alumni/edit/${sessionAlumniId}`);
+//     }
+
+//     console.log('Fetching profile for alumni ID:', alumniId);
+//     console.log('Session alumni ID:', sessionAlumniId);
+
+//     // Validate that it's a proper ObjectId
+//     if (!alumniId || !mongoose.Types.ObjectId.isValid(alumniId)) {
+//       console.log('Invalid alumni ID:', alumniId);
+//       return res.redirect('/alumni/dashboard');
+//     }
+
+//     const alumni = await Alumni.findById(alumniId);
+//     if (!alumni) {
+//       console.log('Alumni not found with ID:', alumniId);
+//       return res.redirect('/alumni/dashboard');
+//     }
+
+//     res.render('pages/alumni/edit-profile', { 
+//       title: 'Edit Alumni',
+//       alumni 
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render('pages/error', { 
+//       title: 'Error',
+//       error: 'Failed to fetch alumni' 
+//     });
+//   }
+// };
+
+// export const getEditAlumni = async (req, res) => {
+//   try {
+//     // // If you're using URL parameters like /alumni/edit/:id
+//     // const alumniId = req.params.id; // This extracts the actual ID from the URL
+
+//     // console.log('Fetching profile for alumni ID:', alumniId);
+
+//     // // Validate that it's a proper ObjectId
+//     // if (!alumniId || !mongoose.Types.ObjectId.isValid(alumniId)) {
+//     //   console.log('Invalid alumni ID:', alumniId);
+//     //   return res.redirect('/alumni/dashboard');
+//     // }
+
+//     // const alumni = await Alumni.findById(alumniId);
+//     // if (!alumni) {
+//     //   console.log('Alumni not found with ID:', alumniId);
+//     //   return res.redirect('/alumni/dashboard');
+//     // }
+
+//     res.render('pages/alumni/edit-profile', { 
+//       title: 'Edit Alumni',
+//       //alumni 
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render('pages/error', { 
+//       title: 'Error',
+//       error: 'Failed to fetch alumni' 
+//     });
+//   }
+// };
+
+// Update Alumni
+// export const updateAlumni = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { firstName, lastName, graduationYear, degree, email, phone, currentJob, company } = req.body;
+//     let updateData = { firstName, lastName, graduationYear, degree, email, phone, currentJob, company };
+    
+//     if (req.file) {
+//       const result = await cloudinary.uploader.upload(req.file.path);
+//       updateData.image = result.secure_url;
+//     }
+
+//     await Alumni.findByIdAndUpdate(id, updateData);
+//     res.redirect('/alumni');
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render('pages/error', { 
+//       title: 'Error',
+//       error: 'Failed to update alumni' 
+//     });
+//   }
+// };
+
+// Get All Alumni
+
+
+
 export const getEditAlumni = async (req, res) => {
   try {
-    const alumni = await Alumni.findById(req.params.id);
-    res.render('pages/edit-alumni', { 
+    let alumniId = req.params.id;
+    
+    // Get alumni ID from session
+    const sessionAlumniId = req.session.alumniId || 
+                           (req.session.alumni && req.session.alumni.id);
+    
+    // If alumni is accessing their own profile
+    if (sessionAlumniId && sessionAlumniId !== alumniId) {
+      // Alumni can only edit their own profile
+      console.log('Alumni trying to edit another profile, redirecting to own profile');
+      return res.redirect(`/alumni/edit/${sessionAlumniId}`);
+    }
+
+    console.log('Fetching profile for alumni ID:', alumniId);
+
+    // Validate that it's a proper ObjectId
+    if (!alumniId || !mongoose.Types.ObjectId.isValid(alumniId)) {
+      console.log('Invalid alumni ID:', alumniId);
+      return res.redirect('/alumni/dashboard');
+    }
+
+    const alumni = await Alumni.findById(alumniId);
+    if (!alumni) {
+      console.log('Alumni not found with ID:', alumniId);
+      return res.redirect('/alumni/dashboard');
+    }
+
+    res.render('pages/alumni/edit-profile', { 
       title: 'Edit Alumni',
-      alumni 
+      alumni: req.user ? req.user : alumni 
     });
   } catch (err) {
     console.error(err);
@@ -925,30 +1196,9 @@ export const getEditAlumni = async (req, res) => {
   }
 };
 
-// Update Alumni
-export const updateAlumni = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { firstName, lastName, graduationYear, degree, email, phone, currentJob, company } = req.body;
-    let updateData = { firstName, lastName, graduationYear, degree, email, phone, currentJob, company };
-    
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path);
-      updateData.image = result.secure_url;
-    }
 
-    await Alumni.findByIdAndUpdate(id, updateData);
-    res.redirect('/alumni');
-  } catch (err) {
-    console.error(err);
-    res.status(500).render('pages/error', { 
-      title: 'Error',
-      error: 'Failed to update alumni' 
-    });
-  }
-};
 
-// Get All Alumni
+
 export const getAllAlumni = async (req, res) => {
   try {
     const alumni = await Alumni.find().sort({ graduationYear: -1 });
@@ -968,19 +1218,60 @@ export const getAllAlumni = async (req, res) => {
 
 
 
+// export const getDashboard = async (req, res) => {
+//   try {
+//        const email = req.user.email;
+
+//       const alumni = await Alumni.findOne({ email }); 
+//       if (!alumni) {
+//         return res.status(404).render('pages/error', { 
+//           title: 'Error',
+//           error: 'Alumni Profile not found' 
+//         });
+//       }
+
+
+//     const alumniCount = await Alumni.countDocuments();
+//     const recentAlumni = await Alumni.find()
+//       .sort({ createdAt: -1 })
+//       .limit(5);
+    
+//     res.render('pages/alumni/alumni-dashboard', {
+//       title: 'Dashboard',
+//       alumni,
+//       alumniCount,
+//       recentAlumniCount: recentAlumni.length,
+//       recentAlumni
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render('pages/error', {
+//       title: 'Error',
+//       error: 'Failed to load dashboard'
+//     });
+//   }
+// };
+
+
 export const getDashboard = async (req, res) => {
   try {
-    const alumniCount = await Alumni.countDocuments();
-    const recentAlumni = await Alumni.find()
-      .sort({ createdAt: -1 })
-      .limit(5);
+    // For testing without authentication - use a specific email
+    const email = req.body.email; // Replace with actual test email
     
+    const alumni = await Alumni.findOne({ email }); 
+    
+    if (!alumni) {
+      return res.status(404).render('pages/error', { 
+        title: 'Error',
+        error: 'Alumni Profile not found' 
+      });
+    }
+
     res.render('pages/alumni/alumni-dashboard', {
       title: 'Dashboard',
-      alumniCount,
-      recentAlumniCount: recentAlumni.length,
-      recentAlumni
+      alumni // Only pass the individual alumni object
     });
+    console.log(alumni); 
   } catch (err) {
     console.error(err);
     res.status(500).render('pages/error', {
@@ -1317,5 +1608,227 @@ export const processExistingAlumniImages = async (req, res) => {
   }
 };
 
+
+//edit /updated an alumni 
+// export const updateAlumni = async (req, res) => {
+//   console.log('Update request received:', req.body);
+  
+//   // Validate request data
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).render('pages/alumni/edit-profile', {
+//       title: 'Edit Profile',
+//       error: errors.array().map(e => e.msg).join(', '),
+//       alumni: req.body // Pass form data back
+//     });
+//   }
+
+//   try {
+//     const {
+//       firstName,
+//       lastName,
+//       matNo,
+//       department,
+//       graduationYear,
+//       degree,
+//       email,
+//       location,
+//       currentPosition,
+//       company,
+//       linkedInProfile,
+//       facebookProfile,
+//       xProfile,
+//       achievements
+//     } = req.body;
+
+//     // Get the alumni ID from the authenticated user or params
+//     const alumniId = req.user ? req.user._id : req.params.id;
+    
+//     // Check if alumni exists
+//     //let alumni = await Alumni.findById(alumniId);
+//     if (!alumniId) {
+//       return res.status(404).render('pages/alumni/edit-profile', {
+//         title: 'Edit Profile',
+//         error: 'Alumni profile not found',
+//         alumni: req.body
+//       });
+//     }
+
+//     // Fetch alumni document
+// const alumni = await Alumni.findById(alumniId);
+// if (!alumni) {
+//   return res.status(404).render('pages/alumni/edit-profile', {
+//     title: 'Edit Profile',
+//     error: 'Alumni profile not found',
+//     alumni: req.body
+//   });
+// }
+
+//     // Check if email is being changed and if it's already taken by someone else
+//     if (email !== alumni.email) {
+//       const existingAlumni = await Alumni.findOne({ email, _id: { $ne: alumniId } });
+//       if (existingAlumni) {
+//         return res.status(400).render('pages/alumni/edit-profile', {
+//           title: 'Edit Profile',
+//           error: 'Email already registered by another user',
+//           alumni: { ...req.body, email: alumnni.email } // Revert to original email
+//         });
+//       }
+//     }
+
+//     // Check if matric number is being changed and if it's already taken
+//     if (matNo !== alumni.matNo) {
+//       const existingAlumni = await Alumni.findOne({ matNo, _id: { $ne: alumniId } });
+//       if (existingAlumni) {
+//         return res.status(400).render('pages/alumni/edit-profile', {
+//           title: 'Edit Profile',
+//           error: 'Matriculation number already in use by another user',
+//           alumni: { ...req.body, matNo: alumni.matNo } // Revert to original matNo
+//         });
+//       }
+//     }
+
+//     // Handle image upload
+//     let image = alumni.image; // Keep existing image by default
+//     if (req.file) {
+//       image = '/uploads/' + req.file.filename;
+      
+//       // Process new image asynchronously
+//       processAlumniImage(alumniId, image).catch(error => {
+//         console.error(`Failed to process new image for ${alumni.email}:`, error.message);
+//       });
+//     }
+
+//     // Update alumni document
+//     const updateData = {
+//       firstName,
+//       lastName,
+//       matNo,
+//       department,
+//       graduationYear: new Date(graduationYear),
+//       degree,
+//       email,
+//       location,
+//       currentPosition,
+//       company,
+//       socialMedia: {
+//         linkedIn: linkedInProfile,
+//         facebook: facebookProfile,
+//         x: xProfile
+//       },
+//       achievements: achievements ? achievements.split(',').map(a => a.trim()) : [],
+//       image
+//     };
+
+//     // Update password only if provided
+//     if (req.body.password && req.body.password.trim() !== '') {
+//       updateData.password = req.body.password;
+//     }
+
+//     const updatedAlumni = await Alumni.findByIdAndUpdate(
+//       alumniId,
+//       updateData,
+//       { new: true, runValidators: true }
+//     );
+
+//     console.log('Profile updated successfully for:', updatedAlumni.email);
+    
+//     // Redirect to dashboard with success message
+//     return res.redirect('/alumni/dashboard?updated=true');
+
+//   } catch (err) {
+//     console.error('Update error:', err);
+//     res.status(500).render('pages/alumni/edit-profile', { 
+//       title: 'Edit Profile',
+//       error: 'Update failed. Please try again.',
+//       alumni: req.body
+//     });
+//   }
+// };
+
+
+
+export const updateAlumni = async (req, res) => {
+  console.log("Update request received:", req.body);  // should now show all form fields
+  console.log("Uploaded file:", req.file);      
+
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).render('pages/alumni/edit-profile', {
+      title: 'Edit Profile',
+      error: errors.array().map(e => e.msg).join(', '),
+      alumni: req.body
+    });
+  }
+
+  try {
+    // 👇 Always get logged-in alumniId from session
+    const alumniId = req.session.alumniId;  
+
+    if (!alumniId) {
+      return res.status(401).render('pages/alumni/login', {
+        title: 'Alumni Login',
+        error: 'You must be logged in to edit your profile'
+      });
+    }
+
+    // Prepare update data
+    const updateData = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      matNo: req.body.matNo,
+      department: req.body.department,
+      graduationYear: req.body.graduationYear ? new Date(req.body.graduationYear) : undefined,
+      degree: req.body.degree,
+      email: req.body.email,
+      location: req.body.location,
+      currentPosition: req.body.currentPosition,
+      company: req.body.company,
+      socialMedia: {
+        linkedIn: req.body.linkedInProfile,
+        facebook: req.body.facebookProfile,
+        x: req.body.xProfile
+      },
+      achievements: req.body.achievements ? req.body.achievements.split(',').map(a => a.trim()) : []
+    };
+
+    // Handle file upload
+    if (req.file) {
+      updateData.image = '/uploads/' + req.file.filename;
+    }
+
+    // Handle password update only if provided
+    if (req.body.password && req.body.password.trim() !== '') {
+      updateData.password = req.body.password;
+    }
+    //console.log("Before update:", alumni.toObject());
+    console.log("New data:", req.body);
+    // Update alumni profile
+    const updatedAlumni = await Alumni.findByIdAndUpdate(
+      alumniId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedAlumni) {
+      return res.status(404).render('pages/alumni/edit-profile', {
+        title: 'Edit Profile',
+        error: 'Alumni profile not found',
+        alumni: req.body
+      });
+    }
+
+    console.log('Profile updated successfully for:', updatedAlumni.email);
+    return res.redirect('/alumni/login');
+
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).render('pages/alumni/edit-profile', {
+      title: 'Edit Profile',
+      error: 'Update failed. Please try again.',
+      alumni: req.body
+    });
+  }
+};
 
 
