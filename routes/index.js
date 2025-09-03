@@ -14,10 +14,15 @@ import {
   updateAlumni,
   deleteAlumni, 
   getAlumniLogin, postAlumniLogin,
-  getAlumniRegister, postAlumniRegister
+  getAlumniRegister, postAlumniRegister,
+  Alumnilogin,
+  getAlumniEdit
   //getSearchAlumniPage
 } from '../controllers/alumniController.js';
-import { ensureAuthenticated, ensureAlumniAuthenticated } from '../middlewares/auth.js';
+import { ensureAuthenticated, ensureAlumniAuthenticated, 
+  ensureAlumniSession } from '../middlewares/auth.js'; 
+
+import { validateToken } from '../middlewares/validateToken.js';
 
 const router = express.Router();
 
@@ -47,12 +52,19 @@ router.get('/alumni', ensureAuthenticated, getAllAlumni);
 router.get('/alumni/search-form', ensureAuthenticated, getSearchAlumniPage);
 
 router.get('/alumni/search', ensureAuthenticated, searchAlumni);
-router.get('/alumni/edit/:id', ensureAuthenticated, getEditAlumni);
-router.post('/alumni/edit/:id', ensureAuthenticated, updateAlumni);
-router.get('/alumni/delete/:id', ensureAuthenticated, deleteAlumni);
 
-router.get('/alumni/login', getAlumniLogin);
-router.post('/alumni/login', postAlumniLogin);
+//router.get('/alumni/edit/:id', ensureAuthenticated, getEditAlumni);
+router.get('/alumni/edit/:id', ensureAlumniAuthenticated, getEditAlumni);
+
+router.post('/alumni/edit',  ensureAlumniAuthenticated, upload.single('image'),updateAlumni);
+//router.post('/alumni/edit', validateToken, updateAlumni);  
+
+router.get('/alumni/delete/:id', ensureAuthenticated, deleteAlumni); 
+
+router.get('/alumni/login',  ensureAlumniAuthenticated,getAlumniLogin);
+//router.post('/alumni/login', ensureAlumniAuthenticated, postAlumniLogin);
+
+router.post('/alumni/login', Alumnilogin)
 
 router.get('/alumni/register', getAlumniRegister);
 
@@ -79,10 +91,25 @@ router.post('/search', uploadSearchImage, searchAlumni);
 router.get('/process-images', processAlumniImages);
 
 // GET - Handle text-only searches (optional)
-router.get('/search/results', searchAlumni);
+router.get('/search/results', searchAlumni); 
 
+
+router.get('/alumni/edit-profile', ensureAlumniSession, getEditAlumni);
+router.get('/alumni/edit-profile', ensureAlumniSession, getAlumniEdit);
 //router.post('/alumni/register', postAlumniRegister);
 
 //EJS routes 
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default router;
