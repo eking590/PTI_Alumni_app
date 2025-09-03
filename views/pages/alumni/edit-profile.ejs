@@ -1,1 +1,226 @@
+<%- include('../../partials/header') %>
 
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <h2 class="text-2xl font-bold mb-6">Edit Your Profile</h2>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+      <%= success %>
+    </div>
+  <% } %>
+
+  <form action="/alumni/edit" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-lg shadow">
+    <!-- Personal Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+        <input 
+          type="text" 
+          name="firstName" 
+          value="<%= alumni.firstName || '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+        <input 
+          type="text" 
+          name="lastName" 
+          value="<%= alumni.lastName || '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+    <!-- Academic Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Matriculation Number *</label>
+        <input 
+          type="text" 
+          name="matNo" 
+          value="<%= alumni.matNo || '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
+        <input 
+          type="text" 
+          name="department" 
+          value="<%= alumni.department || '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Graduation Year *</label>
+        <input 
+          type="date" 
+          name="graduationYear" 
+          value="<%= alumni.graduationYear ? new Date(alumni.graduationYear).toISOString().split('T')[0] : '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Degree *</label>
+        <input 
+          type="text" 
+          name="degree" 
+          value="<%= alumni.degree || '' %>" 
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+      <input 
+        type="email" 
+        name="email" 
+        value="<%= alumni.email || '' %>" 
+        required
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+      <input 
+        type="text" 
+        name="location" 
+        value="<%= alumni.location || '' %>" 
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <!-- Professional Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Current Position</label>
+        <input 
+          type="text" 
+          name="currentPosition" 
+          value="<%= alumni.currentPosition || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Company</label>
+        <input 
+          type="text" 
+          name="company" 
+          value="<%= alumni.company || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+    <!-- Social Media -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile</label>
+        <input 
+          type="url" 
+          name="linkedInProfile" 
+          value="<%= alumni.socialMedia?.linkedIn || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Facebook Profile</label>
+        <input 
+          type="url" 
+          name="facebookProfile" 
+          value="<%= alumni.socialMedia?.facebook || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">X (Twitter) Profile</label>
+        <input 
+          type="url" 
+          name="xProfile" 
+          value="<%= alumni.socialMedia?.x || '' %>" 
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+    </div>
+
+    <!-- Achievements -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Achievements (comma-separated)</label>
+      <textarea 
+        name="achievements" 
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        rows="3"
+      ><%= alumni.achievements ? alumni.achievements.join(', ') : '' %></textarea>
+    </div>
+
+    <!-- Profile Image -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">Profile Image</label>
+      <% if (alumni.image) { %>
+        <div class="mb-3">
+          <img src="<%= alumni.image %>" alt="Current Profile" class="w-32 h-32 object-cover rounded-lg">
+        </div>
+      <% } %>
+      <input 
+        type="file" 
+        name="image" 
+        accept="image/*"
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <!-- Password Update (Optional) -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">New Password (leave blank to keep current)</label>
+      <input 
+        type="password" 
+        name="password" 
+        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+
+    <div class="flex gap-4">
+      <button 
+        type="submit" 
+        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+      >
+        Update Profile
+      </button>
+      
+      <a 
+      
+        href="/alumni/dashboard" 
+        class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>
+
+<%- include('../../partials/footer') %>
