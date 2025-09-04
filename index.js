@@ -1,57 +1,10 @@
-// import express from 'express';
-// import dotenv from 'dotenv';
-// import mongoose from 'mongoose';
-// import cors from "cors";
-// import session from 'express-session';
-// import bodyParser from "body-parser";
-// import path from 'path';
-// import { fileURLToPath } from 'url';
-// import { db } from './config/db.js';
-
-// // Import routes
-// import alumniRoutes from './routes/alumniRoutes.js';
-// import frontendRoutes from './routes/frontendRoutes.js';
-
-// dotenv.config();
-// const app = express();
-// app.use(express.json());
-
-// app.use(bodyParser.json({ limit: '10mb' }));
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(cors());
-
-// // Set EJS as the templating engine
-// app.set('view engine', 'ejs');
-// //app.set('views', path.join(process.cwd(), 'views')); // Make sure 'views' folder is in your project root
-
-// // Set views directory path
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
-// app.set('views', path.join(__dirname, 'views'));
-
-// // MongoDB connection
-// // mongoose.connect(process.env.MONGODB_URI, {
-// //   useNewUrlParser: false,
-// //   useUnifiedTopology: false,
-// // }).then(() => {
-// //   console.log('Connected to MongoDB');
-// // }).catch(err => console.error(err));
-
-// // Routes
-// app.use('/app/api/', alumniRoutes);
-// app.use('/', frontendRoutes);
-
-// // Start server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server listening on port http://localhost:${process.env.PORT}  `));
-
-
 import dotenv from 'dotenv';
 import express from 'express';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import mongoose from 'mongoose';
 import cors from "cors";
+import cookieParser from 'cookie-parser';
 
 import flash from 'express-flash';
 
@@ -74,6 +27,7 @@ db;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 // Static files
 const __filename = fileURLToPath(import.meta.url);
@@ -86,16 +40,18 @@ app.use(session({
     secret: process.env.SESSION_SECRET ||   'your_secret_key',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/PTI-alumni',
-      ttl: 60 * 60 * 24 * 14, // 14 days
-    }), 
+    // store: MongoStore.create({
+    //   mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/PTI-alumni',
+    //   ttl: 60 * 60 * 24 * 14, // 14 days
+    // }), 
     cookie: { 
-      maxAge: 1000 * 60 * 60 * 24 * 14 // = 14 days
+      secure: true, // Set to true if using https
+      //maxAge: 1000 * 60 * 60 * 24 * 14 // = 14 days
      } // Set to true if using https
 }));
 
 app.use(flash());
+
 
 // View engine setup
 app.set('views', path.join(__dirname, 'views'));
