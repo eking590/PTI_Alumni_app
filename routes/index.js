@@ -19,8 +19,7 @@ import {
   getAlumniEdit
   //getSearchAlumniPage
 } from '../controllers/alumniController.js';
-import {  ensureAlumniAuthenticated, 
-  ensureAdminAuthenticated  } from '../middlewares/auth.js'; 
+import {  ensureAlumniAuthenticated  } from '../middlewares/auth.js'; 
 
 import { validateToken } from '../middlewares/validateToken.js'; 
 import { verifyToken } from '../middlewares/jwt.js';
