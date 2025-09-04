@@ -3,7 +3,7 @@
 
 import Alumni from '../models/Alumni.js';
 import bcrypt from 'bcryptjs';
-import ImageProcessor from '../config/imageProcessor.js'; 
+import ImageProcessor from '../config/ImageProcessor.js'; 
 import path from 'path';
 import upload from '../middlewares/upload.js';
 import fs from 'fs';
@@ -12,7 +12,8 @@ import mongoose from 'mongoose';
 import axios from 'axios';
 import { cloudinary } from '../config/cloudinaryConfig.js';
 import { validationResult } from 'express-validator';
-import { generateToken } from "../middlewares/generateToken.js";
+//import { generateToken } from "../middlewares/generateToken.js";
+import { generateToken } from '../middlewares/jwt.js';
 
 
 
@@ -53,20 +54,14 @@ export const postAlumniLogin = async (req, res) => {
         email: email 
       });
     }
+      const token = generateToken(alumni, 'alumni');
 
-     req.session.alumni = {
-      id: alumni._id,
-      email: alumni.email,
-      firstName: alumni.firstName,
-      lastName: alumni.lastName,
-      image: alumni.image,
-      graduationYear: alumni.graduationYear,
-      degree: alumni.degree,
-      department: alumni.department
-    };
+    // Save token in cookie
+    res.cookie('token', token, { httpOnly: true, secure: false }); // secure:true if https
 
     console.log('Session created for:', alumni.email);
-    console.log('req.session.alumni:', req.session.alumni.id);
+    console.log('req.session.alumni:', req.session.alumni);
+    console.log('JWT Token generated:', token);
     
     return res.redirect('/alumni/dashboard');
   } catch (err) {
@@ -142,63 +137,111 @@ export const getAlumniEdit = async (req, res) => {
   }
 };
 
-export const Alumnilogin = async (req, res) => {
-    const { email, password } = req.body;
-    try {
-      // Trim and lowercase email for consistency
-      const normalizedEmail = email.toLowerCase().trim();
+// export const Alumnilogin = async (req, res) => {
+//     const { email, password } = req.body;
+//     try {
+//       // Trim and lowercase email for consistency
+//       const normalizedEmail = email.toLowerCase().trim();
 
   
-      const alumni = await Alumni.findOne({  email: normalizedEmail  });
-    if (!alumni) {
-      return res.status(401).render('pages/alumni/login', { 
-        title: 'Alumni Login',
-        error: 'Invalid email',
-        email: email 
-      });
-    }
-        // Debug: Check what's being compareds
-    console.log('Input password:', password);
-    console.log('Stored hash:', alumni.password);
-    console.log('Alumni found:', alumni.email);
+//       const alumni = await Alumni.findOne({  email: normalizedEmail  });
+//     if (!alumni) {
+//       return res.status(401).render('pages/alumni/login', { 
+//         title: 'Alumni Login',
+//         error: 'Invalid email',
+//         email: email 
+//       });
+//     }
+//         // Debug: Check what's being compareds
+//     console.log('Input password:', password);
+//     console.log('Stored hash:', alumni.password);
+//     console.log('Alumni found:', alumni.email);
 
-      const isMatch = await bcrypt.compare(password, alumni.password);
-      if (!isMatch) {
-        return res.status(401).render('pages/alumni/login', { 
-          title: 'Alumni Login',
-          error: 'Invalid Password' 
-      });
-    }
+//       const isMatch = await bcrypt.compare(password, alumni.password);
+//       if (!isMatch) {
+//         return res.status(401).render('pages/alumni/login', { 
+//           title: 'Alumni Login',
+//           error: 'Invalid Password' 
+//       });
+//     }
 
-      const token = jwt.sign({ id: alumni._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-     // Set alumni data in session (like postAlumniLogin does)
-      req.session.alumni = {
-        id: alumni._id,
-        email: alumni.email,
-        firstName: alumni.firstName,
-        lastName: alumni.lastName,
-        image: alumni.image,
-        graduationYear: alumni.graduationYear,
-        degree: alumni.degree,
-        department: alumni.department
-    };
-    console.log('Session created for:', alumni.email);
-    console.log('req.session.alumni:', req.session.alumni.id);
-    console.log('JWT Token generated');
+//       const token = jwt.sign({ id: alumni._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+//      // Set alumni data in session (like postAlumniLogin does)
+//       req.session.alumni = {
+//         id: alumni._id,
+//         email: alumni.email,
+//         firstName: alumni.firstName,
+//         lastName: alumni.lastName,
+//         image: alumni.image,
+//         graduationYear: alumni.graduationYear,
+//         degree: alumni.degree,
+//         department: alumni.department
+//     };
+//     console.log('Session created for:', alumni.email);
+//     console.log('req.session.alumni:', req.session.alumni.id);
+//     console.log('JWT Token generated');
         
-      return res.redirect('/alumni/dashboard');
-    } catch (err) {
-      console.error(err)
-      return res.status(500).render('pages/alumni/login', {
-        title: 'Alumni Login',
-        error: 'server error',
-        email: email 
-      });
-    }
-  };
+//       return res.redirect('/alumni/dashboard');
+//     } catch (err) {
+//       console.error(err)
+//       return res.status(500).render('pages/alumni/login', {
+//         title: 'Alumni Login',
+//         error: 'server error',
+//         email: email 
+//       });
+//     }
+//   };
 
 // Update your postAlumniLogin controller
 
+// export const AlumniLogin = async (req, res) => {
+//   const { email, password } = req.body;
+
+//   try {
+//     const normalizedEmail = email.toLowerCase().trim();
+//     const alumni = await Alumni.findOne({ email: normalizedEmail });
+
+//     if (!alumni) {
+//       return res.status(401).render('pages/alumni/login', { 
+//         title: 'Alumni Login',
+//         error: 'Invalid credentials',
+//         email
+//       });
+//     }
+
+//     const isMatch = await bcrypt.compare(password, alumni.password);
+//     if (!isMatch) {
+//       return res.status(401).render('pages/alumni/login', { 
+//         title: 'Alumni Login',
+//         error: 'Invalid credentials',
+//         email
+//       });
+//     }
+
+//     // ✅ Always store alumni object in session
+//     req.session.alumni = {
+//       id: alumni._id.toString(),
+//       email: alumni.email,
+//       firstName: alumni.firstName,
+//       lastName: alumni.lastName,
+//       image: alumni.image,
+//       graduationYear: alumni.graduationYear,
+//       degree: alumni.degree,
+//       department: alumni.department
+//     };
+
+//     console.log('Session created for:', req.session.alumni);
+
+//     return res.redirect('/alumni/dashboard');
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).render('pages/alumni/login', { 
+//       title: 'Alumni Login',
+//       error: 'Server error',
+//       email
+//     });
+//   }
+// };
 
 
 // export const postAlumniLogin = async (req, res) => {
@@ -1253,39 +1296,54 @@ export const getAllAlumni = async (req, res) => {
 // };
 
 
-export const getDashboard = async (req, res) => {
-  try {
-    // For testing without authentication - use a specific email
-    const email = req.body.email; // Replace with actual test email
+// export const getDashboard = async (req, res) => {
+//   try {
+//     // For testing without authentication - use a specific email
+//     const email = req.body.email; // Replace with actual test email
     
-    const alumni = await Alumni.findOne({ email }); 
+//     const alumni = await Alumni.findOne({ email }); 
     
-    if (!alumni) {
-      return res.status(404).render('pages/error', { 
-        title: 'Error',
-        error: 'Alumni Profile not found' 
-      });
-    }
+//     if (!alumni) {
+//       return res.status(404).render('pages/error', { 
+//         title: 'Error',
+//         error: 'Alumni Profile not found' 
+//       });
+//     }
 
-    res.render('pages/alumni/alumni-dashboard', {
-      title: 'Dashboard',
-      alumni // Only pass the individual alumni object
-    });
-    console.log(alumni); 
-  } catch (err) {
-    console.error(err);
-    res.status(500).render('pages/error', {
-      title: 'Error',
-      error: 'Failed to load dashboard'
-    });
-  }
-};
+//     res.render('pages/alumni/alumni-dashboard', {
+//       title: 'Dashboard',
+//       alumni // Only pass the individual alumni object
+//     });
+//     console.log(alumni); 
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).render('pages/error', {
+//       title: 'Error',
+//       error: 'Failed to load dashboard'
+//     });
+//   }
+// };
 
 export const getAlumniDashboard = async (req, res) => {
-  res.render('pages/alumni/alumni-dashboard', {
+  try {
+     if (req.user.type !== 'alumni') 
+      {return res.redirect('/alumni/login')};
+
+     const alumni = await Alumni.findById(req.user.id);
+    if (!alumni) {
+      return res.render('/alumni/login', { 
+      });
+    }
+    res.render('pages/alumni/alumni-dashboard', {
     title: 'Alumni Dashboard',
-    alumni: req.session.alumni
+    alumni
   });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server error');
+  }
+
 };
 
 
@@ -1748,9 +1806,170 @@ export const processExistingAlumniImages = async (req, res) => {
 
 
 
+// export const updateAlumni = async (req, res) => {
+//   console.log("Update request received:", req.body);  // should now show all form fields
+//   console.log("Uploaded file:", req.file);      
+
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).render('pages/alumni/edit-profile', {
+//       title: 'Edit Profile',
+//       error: errors.array().map(e => e.msg).join(', '),
+//       alumni: req.body
+//     });
+//   }
+
+//   try {
+//     // 👇 Always get logged-in alumniId from session
+//     const alumniId = req.session.alumniId;  
+
+//     if (!alumniId) {
+//       return res.status(401).render('pages/alumni/login', {
+//         title: 'Alumni Login',
+//         error: 'You must be logged in to edit your profile'
+//       });
+//     }
+
+//     // Prepare update data
+//     const updateData = {
+//       firstName: req.body.firstName,
+//       lastName: req.body.lastName,
+//       matNo: req.body.matNo,
+//       department: req.body.department,
+//       graduationYear: req.body.graduationYear ? new Date(req.body.graduationYear) : undefined,
+//       degree: req.body.degree,
+//       email: req.body.email,
+//       location: req.body.location,
+//       currentPosition: req.body.currentPosition,
+//       company: req.body.company,
+//       socialMedia: {
+//         linkedIn: req.body.linkedInProfile,
+//         facebook: req.body.facebookProfile,
+//         x: req.body.xProfile
+//       },
+//       achievements: req.body.achievements ? req.body.achievements.split(',').map(a => a.trim()) : []
+//     };
+
+//     // Handle file upload
+//     if (req.file) {
+//       updateData.image = '/uploads/' + req.file.filename;
+//     }
+
+//     // Handle password update only if provided
+//     if (req.body.password && req.body.password.trim() !== '') {
+//       updateData.password = req.body.password;
+//     }
+//     //console.log("Before update:", alumni.toObject());
+//     console.log("New data:", req.body);
+//     // Update alumni profile
+//     const updatedAlumni = await Alumni.findByIdAndUpdate(
+//       alumniId,
+//       updateData,
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedAlumni) {
+//       return res.status(404).render('pages/alumni/edit-profile', {
+//         title: 'Edit Profile',
+//         error: 'Alumni profile not found',
+//         alumni: req.body
+//       });
+//     }
+
+//     console.log('Profile updated successfully for:', updatedAlumni.email);
+//     return res.redirect('/alumni/login');
+
+//   } catch (err) {
+//     console.error('Update error:', err);
+//     res.status(500).render('pages/alumni/edit-profile', {
+//       title: 'Edit Profile',
+//       error: 'Update failed. Please try again.',
+//       alumni: req.body
+//     });
+//   }
+// };
+
+
+// export const updateAlumni = async (req, res) => {
+//   console.log('Update request received:', req.body);
+
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(400).render('pages/alumni/edit-profile', {
+//       title: 'Edit Profile',
+//       error: errors.array().map(e => e.msg).join(', '),
+//       alumni: req.body
+//     });
+//   }
+
+//   try {
+//     const alumniId = req.session.alumni?.id;
+//     if (!alumniId) {
+//       return res.status(401).render('pages/alumni/login', {
+//         title: 'Alumni Login',
+//         error: 'You must be logged in to edit your profile'
+//       });
+//     }
+
+//     const updateData = {
+//       firstName: req.body.firstName,
+//       lastName: req.body.lastName,
+//       matNo: req.body.matNo,
+//       department: req.body.department,
+//       graduationYear: req.body.graduationYear ? new Date(req.body.graduationYear) : undefined,
+//       degree: req.body.degree,
+//       email: req.body.email,
+//       location: req.body.location,
+//       currentPosition: req.body.currentPosition,
+//       company: req.body.company,
+//       socialMedia: {
+//         linkedIn: req.body.linkedInProfile,
+//         facebook: req.body.facebookProfile,
+//         x: req.body.xProfile
+//       },
+//       achievements: req.body.achievements ? req.body.achievements.split(',').map(a => a.trim()) : []
+//     };
+
+//     if (req.file) {
+//       updateData.image = '/uploads/' + req.file.filename;
+//     }
+
+//     if (req.body.password && req.body.password.trim() !== '') {
+//       updateData.password = req.body.password;
+//     }
+
+//     const updatedAlumni = await Alumni.findByIdAndUpdate(alumniId, updateData, { new: true, runValidators: true });
+
+//     if (!updatedAlumni) {
+//       return res.status(404).render('pages/alumni/edit-profile', {
+//         title: 'Edit Profile',
+//         error: 'Alumni profile not found',
+//         alumni: req.body
+//       });
+//     }
+
+//     // ✅ Keep session in sync after update
+//     req.session.alumni = {
+//       ...req.session.alumni,
+//       ...updateData,
+//       id: updatedAlumni._id.toString()
+//     };
+
+//     console.log('Profile updated successfully for:', updatedAlumni.email);
+//     return res.redirect('/alumni/dashboard?updated=true');
+//   } catch (err) {
+//     console.error('Update error:', err);
+//     res.status(500).render('pages/alumni/edit-profile', {
+//       title: 'Edit Profile',
+//       error: 'Update failed. Please try again.',
+//       alumni: req.body
+//     });
+//   }
+// };
+
+
 export const updateAlumni = async (req, res) => {
-  console.log("Update request received:", req.body);  // should now show all form fields
-  console.log("Uploaded file:", req.file);      
+  console.log('Update request received:', req.body);
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -1762,17 +1981,16 @@ export const updateAlumni = async (req, res) => {
   }
 
   try {
-    // 👇 Always get logged-in alumniId from session
-    const alumniId = req.session.alumniId;  
-
-    if (!alumniId) {
+    // ✅ Get alumni ID from JWT (set by verifyToken middleware)
+    const alumniId = req.user?.id;
+    if (!alumniId || req.user.type !== 'alumni') {
       return res.status(401).render('pages/alumni/login', {
         title: 'Alumni Login',
         error: 'You must be logged in to edit your profile'
       });
     }
 
-    // Prepare update data
+    // ✅ Build update data
     const updateData = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -1789,21 +2007,23 @@ export const updateAlumni = async (req, res) => {
         facebook: req.body.facebookProfile,
         x: req.body.xProfile
       },
-      achievements: req.body.achievements ? req.body.achievements.split(',').map(a => a.trim()) : []
+      achievements: req.body.achievements
+        ? req.body.achievements.split(',').map(a => a.trim())
+        : []
     };
 
-    // Handle file upload
+    // ✅ Handle file upload
     if (req.file) {
       updateData.image = '/uploads/' + req.file.filename;
     }
 
-    // Handle password update only if provided
+    // ✅ Handle password update (rehash)
     if (req.body.password && req.body.password.trim() !== '') {
-      updateData.password = req.body.password;
+      const bcrypt = await import('bcryptjs');
+      updateData.password = await bcrypt.hash(req.body.password, 10);
     }
-    //console.log("Before update:", alumni.toObject());
-    console.log("New data:", req.body);
-    // Update alumni profile
+
+    // ✅ Update in MongoDB
     const updatedAlumni = await Alumni.findByIdAndUpdate(
       alumniId,
       updateData,
@@ -1819,8 +2039,7 @@ export const updateAlumni = async (req, res) => {
     }
 
     console.log('Profile updated successfully for:', updatedAlumni.email);
-    return res.redirect('/alumni/login');
-
+    return res.redirect('/alumni/dashboard?updated=true');
   } catch (err) {
     console.error('Update error:', err);
     res.status(500).render('pages/alumni/edit-profile', {
@@ -1830,6 +2049,3 @@ export const updateAlumni = async (req, res) => {
     });
   }
 };
-
-
-
