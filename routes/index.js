@@ -15,14 +15,15 @@ import {
   deleteAlumni, 
   getAlumniLogin, postAlumniLogin,
   getAlumniRegister, postAlumniRegister,
-  Alumnilogin,
+  //Alumnilogin,
   getAlumniEdit
   //getSearchAlumniPage
 } from '../controllers/alumniController.js';
-import { ensureAuthenticated, ensureAlumniAuthenticated, 
-  ensureAlumniSession } from '../middlewares/auth.js'; 
+import {  ensureAlumniAuthenticated, 
+  ensureAdminAuthenticated  } from '../middlewares/auth.js'; 
 
-import { validateToken } from '../middlewares/validateToken.js';
+import { validateToken } from '../middlewares/validateToken.js'; 
+import { verifyToken } from '../middlewares/jwt.js';
 
 const router = express.Router();
 
@@ -43,28 +44,30 @@ const upload = multer({ storage });
 router.get('/login', getLogin);
 router.post('/login', postLogin);
 router.get('/logout', logout);
-router.get('/dashboard', ensureAuthenticated, getDashboard);
+router.get('/dashboard', verifyToken, getDashboard);
 // Alumni routes
-router.get('/', ensureAuthenticated, getAllAlumni);
-router.get('/alumni/dashboard', ensureAlumniAuthenticated, getAlumniDashboard);
-router.get('/alumni', ensureAuthenticated, getAllAlumni);
-//router.post('/alumni', ensureAuthenticated, addAlumni);
-router.get('/alumni/search-form', ensureAuthenticated, getSearchAlumniPage);
+router.get('/', ensureAlumniAuthenticated, getAllAlumni);
+//router.get('/alumni/dashboard', ensureAlumniAuthenticated, getAlumniDashboard);
+router.get('/alumni/dashboard', verifyToken, getAlumniDashboard);
 
-router.get('/alumni/search', ensureAuthenticated, searchAlumni);
+router.get('/alumni', ensureAlumniAuthenticated, getAllAlumni);
+//router.post('/alumni', ensureAuthenticated, addAlumni);
+router.get('/alumni/search-form', verifyToken, getSearchAlumniPage);
+
+router.get('/alumni/search', verifyToken, searchAlumni);
 
 //router.get('/alumni/edit/:id', ensureAuthenticated, getEditAlumni);
-router.get('/alumni/edit/:id', ensureAlumniAuthenticated, getEditAlumni);
+router.get('/alumni/edit/:id', verifyToken, getEditAlumni);
 
-router.post('/alumni/edit',  ensureAlumniAuthenticated, upload.single('image'),updateAlumni);
+router.post('/alumni/edit',  verifyToken, upload.single('image'), updateAlumni);
 //router.post('/alumni/edit', validateToken, updateAlumni);  
 
-router.get('/alumni/delete/:id', ensureAuthenticated, deleteAlumni); 
+router.get('/alumni/delete/:id', verifyToken, deleteAlumni); 
 
-router.get('/alumni/login',  ensureAlumniAuthenticated,getAlumniLogin);
-//router.post('/alumni/login', ensureAlumniAuthenticated, postAlumniLogin);
+router.get('/alumni/login',  getAlumniLogin);
+router.post('/alumni/login',  postAlumniLogin);
 
-router.post('/alumni/login', Alumnilogin)
+// router.post('/alumni/login', Alumnilogin)
 
 router.get('/alumni/register', getAlumniRegister);
 
@@ -94,8 +97,9 @@ router.get('/process-images', processAlumniImages);
 router.get('/search/results', searchAlumni); 
 
 
-router.get('/alumni/edit-profile', ensureAlumniSession, getEditAlumni);
-router.get('/alumni/edit-profile', ensureAlumniSession, getAlumniEdit);
+//router.get('/alumni/edit-profile', verifyToken, getEditAlumni);
+
+router.get('/alumni/edit-profile', verifyToken, getAlumniEdit);
 //router.post('/alumni/register', postAlumniRegister);
 
 //EJS routes 
