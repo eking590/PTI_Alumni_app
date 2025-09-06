@@ -16,6 +16,7 @@
       <h3>Your Information</h3>
       <p><strong>Name:</strong> <%= alumni.firstName %> <%= alumni.lastName %></p>
       <p><strong>Department:</strong> <%= alumni.department %></p>
+      <p><strong>Mat No:</strong> <%= alumni.matNo %></p>
       <!-- Fixed graduation year display with proper date parsing -->
 <!-- Graduation Year with multiple fallback options -->
         <% if (alumni.graduationYear) { 
@@ -75,3 +76,4 @@
 
 
 <%- include('../../partials/footer') %>
+
