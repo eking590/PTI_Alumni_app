@@ -1,7 +1,13 @@
 import express from 'express';
 import { check } from 'express-validator';
 import multer from 'multer';
-import { getDashboard, getLogin, postLogin, logout } from '../controllers/adminController.js';
+import { getDashboard, getLogin, postLogin, 
+        getPendingVerifications,
+        verifyAlumni,
+        rejectAlumni,
+        getAlumniVerificationDetails,
+        logout } from '../controllers/adminController.js';
+
 import {
   getAllAlumni,
   //addAlumni,
@@ -21,7 +27,7 @@ import {
 } from '../controllers/alumniController.js';
 import {  ensureAlumniAuthenticated  } from '../middlewares/auth.js'; 
 
-import { validateToken } from '../middlewares/validateToken.js'; 
+//import { validateToken } from '../middlewares/validateToken.js'; 
 import { verifyToken } from '../middlewares/jwt.js';
 
 const router = express.Router();
@@ -44,6 +50,13 @@ router.get('/login', getLogin);
 router.post('/login', postLogin);
 router.get('/logout', logout);
 router.get('/dashboard', verifyToken, getDashboard);
+
+// Verification routes
+router.get('/verifications', verifyToken, getPendingVerifications);
+router.get('/verifications/:alumniId', verifyToken, getAlumniVerificationDetails);
+router.post('/admin/verify/:alumniId', verifyToken, verifyAlumni);
+router.post('/admin/reject/:alumniId', verifyToken, rejectAlumni);
+
 // Alumni routes
 router.get('/', ensureAlumniAuthenticated, getAllAlumni);
 //router.get('/alumni/dashboard', ensureAlumniAuthenticated, getAlumniDashboard);
