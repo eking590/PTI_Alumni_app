@@ -1,8 +1,10 @@
 import dotenv from 'dotenv';
 import express from 'express';
 import session from 'express-session';
-import MongoStore from 'connect-mongo';
-import mongoose from 'mongoose';
+//import MongoStore from 'connect-mongo';
+// app.js
+import { ensureJsonResponse } from './middlewares/apiResponse.js';
+//import mongoose from 'mongoose';
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 
@@ -26,7 +28,10 @@ db;
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*', 
+  credentials: true
+}));
 app.use(cookieParser());
 
 // Static files
@@ -57,6 +62,7 @@ app.use(flash());
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(ensureJsonResponse);
 // Routes
 app.use('/', routes);
 
