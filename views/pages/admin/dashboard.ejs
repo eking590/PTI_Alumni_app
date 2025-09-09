@@ -12,7 +12,23 @@
       <h3>Recent Registrations</h3>
       <p><%= recentAlumniCount %></p>
     </div>
-  </div>
+     <div class="stat-card">
+        <h3>Verified</h3>
+        <p><%= verifiedCount %></p>
+      </div>
+
+      <div class="stat-card">
+      <h3>Pending Verification</h3>
+        <p><%= pendingCount %>
+          <% if (pendingCount > 0) { %>
+            <a href="/verifications">Review Now</a>
+          <% } %>   </p>
+    </div> 
+  
+
+  </div> 
+
+ 
 
   <div class="quick-actions">
     <h3>Quick Actions</h3>
@@ -20,6 +36,7 @@
       <a href="/alumni" class="button">Manage Alumni</a>
       <a href="/alumni/register" class="button">Add New Alumni</a>
       <a href="/alumni/search-form" class="button">Search Alumni</a>
+      <a href="/verifications" class="button">Verify Alumni</a>
     </div>
   </div>
 
@@ -48,6 +65,8 @@
       <p>No recent alumni found</p>
     <% } %>
   </div>
+
+
 
 <div>
  <a href="/login" class="button">Logout</a>
