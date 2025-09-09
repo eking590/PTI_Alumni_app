@@ -40,7 +40,20 @@ const alumniSchema = new Schema({
   dateRegistered: {
     type: Date,
     default: Date.now
-  }
+  },
+  verified: {
+    type: Boolean,
+    default: false
+  },
+  verificationDate: {
+    type: Date,
+    default: null
+  },
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    default: null
+  },
 }, { timestamps: true });
 
 alumniSchema.index({
