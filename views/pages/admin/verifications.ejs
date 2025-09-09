@@ -1,0 +1,143 @@
+<%- include('../../partials/header') %>
+ <meta name="jwt-token" content="<%= jwtToken || '' %>">
+<body>
+    <div class="container mt-4">
+        <h2>Pending Verifications</h2>
+        
+        <% if (pendingAlumni.length === 0) { %>
+            <div class="alert alert-info">No pending verifications</div>
+        <% } else { %>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Matric No</th>
+                            <th>Department</th>
+                            <th>Registration Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% pendingAlumni.forEach(alumni => { %>
+                            <tr>
+                                <td><%= alumni.firstName %> <%= alumni.lastName %></td>
+                                <td><%= alumni.email %></td>
+                                <td><%= alumni.matNo %></td>
+                                <td><%= alumni.department %></td>
+                                <td><%= alumni.createdAt.toLocaleDateString() %></td>
+                                <td>
+                                    <a href="/verifications/<%= alumni._id %>" class="btn btn-info btn-sm">View Details</a>
+                                    <button onclick="verifyAlumni('<%= alumni._id %>')" class="btn btn-success btn-sm">Verify</button>
+                                    <button onclick="rejectAlumni('<%= alumni._id %>')" class="btn btn-danger btn-sm">Reject</button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } %>
+    </div>
+
+    <script>
+    
+// function getTokenFromMeta() {
+//     const metaTag = document.querySelector('meta[name="jwt-token"]');
+//     return metaTag ? metaTag.getAttribute('content') : null;
+// }
+
+// function getCookie(name) {
+//     const value = `; ${document.cookie}`;
+//     const parts = value.split(`; ${name}=`);
+//     if (parts.length === 2) return parts.pop().split(';').shift();
+//     return null;
+// }
+    async function verifyAlumni(alumniId) {
+        if (confirm('Are you sure you want to verify this alumni?')) {
+            try {
+                
+            console.log('Sending verification request...');
+                // // Use token passed from server
+                // const token = getTokenFromMeta();
+
+            const response = await fetch(`/admin/verify/${alumniId}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Authorization': `Bearer ${token}`
+                }
+            });
+
+            console.log('Response status:', response.status);
+
+            const result = await response.json();
+            console.log('Response data:', result);
+
+            if (response.ok && result.success) {
+                alert('Alumni verified successfully!');
+                window.location.href = '/dashboard'; // Redirect to dashboard after verification
+            
+            } else {
+                const error = await response.json();
+                alert('Error: ' + (error.message || 'Failed to verify alumni')) };
+    
+        } catch (error) {
+                 console.error('Fetch error:', error);
+                alert('Network error: ' + error.message);
+            } 
+            }
+        }
+    
+
+    async function rejectAlumni(alumniId) {
+        const reason = prompt('Please enter reason for rejection:');
+
+        if (reason.trim() === '') {
+            alert('Please provide a reason for rejection.');
+            return;
+            }
+
+        try {
+            const response = await fetch(`/admin/reject/${alumniId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ reason: reason.trim() })
+            });
+        
+            // Check if response is JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const result = await response.json();
+            
+                if (response.ok && result.success) {
+                    alert('Alumni registration rejected!');
+                    // Redirect or reload based on current page
+                    if (window.location.pathname.includes('verifications/')) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    alert('Error: ' + (result.message || 'Failed to reject alumni'));
+                }
+            } else {
+                // Handle non-JSON response
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                alert('Server returned an unexpected response. Please try again.');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('Network error: ' + error.message);
+        }
+        }
+
+    </script>
+</body>
+<%- include('../../partials/footer') %>
