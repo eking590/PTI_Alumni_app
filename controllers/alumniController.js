@@ -2,15 +2,16 @@
 
 
 import Alumni from '../models/Alumni.js';
+//import Admin from '../models/Admin.js';
 import bcrypt from 'bcryptjs';
 import ImageProcessor from '../config/imageProcessor.js'; 
 import path from 'path';
 import upload from '../middlewares/upload.js';
 import fs from 'fs';
-import jwt from 'jsonwebtoken';
+//import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import axios from 'axios';
-import { cloudinary } from '../config/cloudinaryConfig.js';
+//import { cloudinary } from '../config/cloudinaryConfig.js';
 import { validationResult } from 'express-validator';
 //import { generateToken } from "../middlewares/generateToken.js";
 import { generateToken } from '../middlewares/jwt.js';
@@ -40,6 +41,14 @@ export const postAlumniLogin = async (req, res) => {
         email: email 
       });
     }
+    // Check if alumni is verified
+    if (!alumni.verified) {
+      return res.status(401).render('pages/alumni/login', { 
+        title: 'Alumni Login',
+        error: 'Your account is pending admin verification. Please wait for approval.',
+        email: email 
+      });
+    }
 
     // Debug: Check what's being compared
     console.log('Input password:', password);
@@ -57,11 +66,18 @@ export const postAlumniLogin = async (req, res) => {
       const token = generateToken(alumni, 'alumni');
 
     // Save token in cookie
-    res.cookie('token', token, { httpOnly: true, secure: false }); // secure:true if https
+    res.cookie('token', token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    
+    }); // secure:true if https
 
     console.log('Session created for:', alumni.email);
     console.log('req.session.alumni:', req.session.alumni);
     console.log('JWT Token generated:', token);
+    console.log('Login successful, cookie set for:', alumni.email);
     
     return res.redirect('/alumni/dashboard');
   } catch (err) {
@@ -1455,6 +1471,8 @@ export const getAlumniRegister = (req, res) => {
 //     });
 //   }
 // };
+
+
 export const postAlumniRegister = async (req, res) => {
    console.log('Registration request received:', req.body);
   // Validate request data
@@ -1545,7 +1563,10 @@ export const postAlumniRegister = async (req, res) => {
       achievements: achievements ? achievements.split(',').map(a => a.trim()) : [],
       image,
       imageFeatures: [],
-      imageHash: ''
+      imageHash: '',
+      verified: false, // Requires admin verification
+      verificationDate: null,
+      verifiedBy: null,
     });
 
     console.log('Image to save:', image);
@@ -1562,9 +1583,9 @@ export const postAlumniRegister = async (req, res) => {
         // Don't throw - registration should not fail due to image processing
       });
     }
-    console.log('Registration successful. Redirecting to login page.');
+    console.log('Registration Pending!!. Awaiting admin verification.');
     // Redirect to login immediately (don't wait for image processing)
-    return res.redirect('/alumni/login?registered=true');
+    return res.redirect('/alumni/login?registered=true&pendingVerification=true');
 
   } catch (err) {
     console.error('Registration error:', err);
@@ -2049,4 +2070,10 @@ export const updateAlumni = async (req, res) => {
     });
   }
 };
+
+
+
+
+// add verification process 
+
 
