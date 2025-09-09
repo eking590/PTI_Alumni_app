@@ -1,0 +1,252 @@
+   <%- include('../../partials/header') %>
+
+<body>
+
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="/verifications">Verifications</a></li>
+                        <li class="breadcrumb-item active">Verification Details</li>
+                    </ol>
+                </nav>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h4>Alumni Verification Details</h4>
+                        <div>
+                            <button onclick="verifyAlumni('<%= alumni._id %>')" class="btn btn-success btn-sm">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                            <button onclick="rejectAlumni('<%= alumni._id %>')" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                            <a href="/dashboard" class="btn btn-secondary btn-sm">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <% if (alumni.image) { %>
+                                    <img src="<%= alumni.image %>" alt="Profile Image" class="img-fluid rounded mb-3" style="max-height: 300px;">
+                                <% } else { %>
+                                    <div class="text-center text-muted mb-3">
+                                        <i class="fas fa-user-circle fa-5x"></i>
+                                        <p>No profile image</p>
+                                    </div>
+                                <% } %>
+                                
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6>Registration Info</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <p><strong>Registered:</strong> <%= alumni.createdAt.toLocaleDateString() %></p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge bg-<%= alumni.verified ? 'success' : 'warning' %>">
+                                                <%= alumni.verified ? 'Verified' : 'Pending Verification' %>
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h6>Personal Information</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Name:</strong> <%= alumni.firstName %> <%= alumni.lastName %></p>
+                                                <p><strong>Email:</strong> <%= alumni.email %></p>
+                                                <p><strong>Matric No:</strong> <%= alumni.matNo %></p>
+                                                <p><strong>Location:</strong> <%= alumni.location || 'Not specified' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h6>Academic Information</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Department:</strong> <%= alumni.department %></p>
+                                                <p><strong>Degree:</strong> <%= alumni.degree %></p>
+                                                <p><strong>Graduation Year:</strong> 
+                                                    <%= alumni.graduationYear ? alumni.graduationYear.getFullYear() : 'Not specified' %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h6>Professional Information</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>Current Position:</strong> <%= alumni.currentPosition || 'Not specified' %></p>
+                                                <p><strong>Company:</strong> <%= alumni.company || 'Not specified' %></p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h6>Social Media</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p><strong>LinkedIn:</strong> 
+                                                    <% if (alumni.socialMedia?.linkedIn) { %>
+                                                        <a href="<%= alumni.socialMedia.linkedIn %>" target="_blank">View Profile</a>
+                                                    <% } else { %>
+                                                        Not provided
+                                                    <% } %>
+                                                </p>
+                                                <p><strong>Facebook:</strong> 
+                                                    <% if (alumni.socialMedia?.facebook) { %>
+                                                        <a href="<%= alumni.socialMedia.facebook %>" target="_blank">View Profile</a>
+                                                    <% } else { %>
+                                                        Not provided
+                                                    <% } %>
+                                                </p>
+                                                <p><strong>Twitter/X:</strong> 
+                                                    <% if (alumni.socialMedia?.x) { %>
+                                                        <a href="<%= alumni.socialMedia.x %>" target="_blank">View Profile</a>
+                                                    <% } else { %>
+                                                        Not provided
+                                                    <% } %>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <% if (alumni.achievements && alumni.achievements.length > 0) { %>
+                                    <div class="card mb-3">
+                                        <div class="card-header">
+                                            <h6>Achievements & Skills</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-unstyled">
+                                                <% alumni.achievements.forEach(achievement => { %>
+                                                    <li><i class="fas fa-trophy text-warning"></i> <%= achievement %></li>
+                                                <% }); %>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+function getAuthToken() {
+    // Try localStorage first
+    let token = localStorage.getItem('jwtToken');
+    
+    // If not in localStorage, try cookies
+    if (!token) {
+        token = getCookie('token');
+    }
+    
+    // If still not found, try from meta tag (if you set it in your EJS)
+    if (!token) {
+        const metaToken = document.querySelector('meta[name="jwt-token"]');
+        if (metaToken) {
+            token = metaToken.getAttribute('content');
+        }
+    }
+    
+    return token;
+}
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+
+    async function verifyAlumni(alumniId) {
+        if (confirm('Are you sure you want to verify this alumni? They will be able to access the system immediately.')) {
+            try {
+
+                console.log('Sending verification request for:', alumniId);
+
+                // Use token passed from server
+               
+                const response = await fetch(`/admin/verify/${alumniId}`, {
+                    method: 'POST',
+                   
+                    headers: {
+
+                        'Content-Type': 'application/json',
+                       
+                    },
+                    credentials: 'include' // ← This sends cookies automatically
+                });
+                
+                if (response.ok) {
+                    alert('Alumni verified successfully!');
+                    window.location.href = '/dashboard'; // Redirect to dashboard after verification
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to verify alumni'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    }
+
+
+
+
+    async function rejectAlumni(alumniId) {
+        const reason = prompt('Please enter reason for rejection:');
+        if (reason) {
+            try {
+                const response = await fetch(`/admin/reject/${alumniId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+                
+                if (response.ok) {
+                    alert('Alumni registration rejected!');
+                    window.location.href = '/dashboard'; // Redirect to dashboard after rejection
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to reject alumni'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+   
+</body>
+<%- include('../../partials/footer') %>
