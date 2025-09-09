@@ -1,73 +1,5 @@
 <%- include('../../partials/header') %>
 
-<!-- <h3>Add New Alumni</h3>
-<form action="/alumni/register" method="POST" enctype="multipart/form-data">
-  <div>
-    <label for="firstName">First Name:</label>
-    <input type="text" id="firstName" name="firstName">
-  </div>
-  <div>
-    <label for="lastName">Last Name:</label>
-    <input type="text" id="lastName" name="lastName">
-  </div>
-  <div>
-    <label for="department">Department:</label>
-    <input type="text" id="department" name="department">
-  </div>
-  <div>
-    <label for="matNo">Mat No:</label>
-    <input type="text" id="matNo" name="matNo">
-  </div>
-   <div>
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
-  </div>
-  <div>
-    <label for="graduationYear">Graduation Year:</label>
-    <input type="date" id="graduationYear" name="graduationYear">
-  </div>
-  <div>
-    <label for="degree">Degree:</label>
-    <input type="text" id="degree" name="degree">
-  </div>
-  <div>
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email">
-  </div>
-    <div>
-    <label for="location">Location:</label>
-    <input type="text" id="location" name="location">
-  </div>
-  <div>
-    <label for="currentPosition">Current Position:</label>
-    <input type="text" id="currentPosition" name="currentPosition">
-  </div>
-  <div>
-    <label for="company">Company:</label>
-    <input type="text" id="company" name="company">
-  </div>
-  <div>
-    <label for="linkedInProfile">LinkedIn Profile:</label>
-    <input type="text" id="linkedInProfile" name="linkedInProfile">
-  </div>
-    <div>
-        <label for="facebookProfile">Facebook Profile:</label>
-        <input type="text" id="facebookProfile" name="facebookProfile">
-  </div>
-  <div>
-    <label for="xProfile">X Profile:</label>
-    <input type="text" id="xProfile" name="xProfile">
-  </div>
-  <div>
-    <label for="achievements">Achievements:</label>
-    <textarea id="achievements" name="achievements"></textarea>
-  </div>
-  <div>
-    <label for="image">Image:</label>
-    <input type="file" id="image" name="image" accept="image/*">
-  </div>
-  <button type="submit">Add Alumni</button>
-</form> -->
 
 
 <div class="registration-container">
@@ -76,7 +8,7 @@
   <!-- Success Message -->
   <% if (typeof success !== 'undefined' && success) { %>
     <div class="alert success" id="successMessage">
-      ✅ Alumni registered successfully! 
+      ✅ Thanks for registering! Please wait for verification! 
       <span id="countdown">Redirecting to login in 5 seconds...</span>
     </div>
   <% } %>
@@ -159,7 +91,7 @@
     </div>
 
     <button type="submit" id="submitButton">
-      Add Alumni
+      Register
     </button>
 <div class="action-buttons">
   <a href="/alumni/login" class="button">Logout</a>
@@ -261,8 +193,8 @@
       successOverlay.className = 'success-celebration';
       successOverlay.innerHTML = `
         <div class="success-icon">🎉</div>
-        <div class="success-message">Registered Successfully!</div>
-        <div class="success-submessage">Your alumni account has been created</div>
+        <div class="success-message">Your registration is being reviewed! please wait for verification</div>
+        <div class="success-submessage">Your alumni account is pending, please wait for verification</div>
         <div style="font-size: 0.9rem; color: #6c757d;">You will be redirected shortly...</div>
       `;
       
